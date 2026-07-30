@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dillex Solicitors — case docket (template / demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182842; --ink-soft:#3c4a63; --parchment:#F5F2EA; --paper:#FFFFFF;
+    --slate:#666f7d; --rule:#DCD5C4;
+    --burgundy:#8C3B3B; --burgundy-bg:#F3E7E5;
+    --forest:#3F5D4E; --forest-bg:#E7EEE8;
+    --ochre:#96702A; --ochre-bg:#F4EBD9;
+    --grey-bg:#EEEBE2;
+    --plum:#5C4066; --plum-bg:#EEE7F0;
+    --steel:#2C4870; --steel-bg:#E4EAF2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--parchment);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+  .wrap{max-width:1220px;margin:0 auto;padding:2.5rem 2rem 4rem;}
+  .masthead{border-bottom:2px solid var(--ink);padding-bottom:1.25rem;margin-bottom:1.75rem;display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;flex-wrap:wrap;}
+  .masthead .firm{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--ochre);margin-bottom:6px;}
+  .masthead h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:32px;margin:0 0 4px;letter-spacing:-0.01em;}
+  .masthead .sub{font-size:13px;color:var(--slate);text-transform:uppercase;letter-spacing:.08em;}
+  .masthead .date{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink-soft);text-align:right;}
+  .storage-note{font-size:11.5px;color:var(--ink-soft);background:var(--paper);border:1px solid var(--rule);padding:9px 12px;border-radius:2px;margin-bottom:1.5rem;line-height:1.5;}
+  .storage-note.blocked{border-color:var(--burgundy);color:var(--burgundy);}
+  .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin-bottom:2rem;}
+  .stat{background:var(--paper);padding:12px 14px;}
+  .stat .n{font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:500;line-height:1;}
+  .stat .l{font-size:10.5px;color:var(--slate);text-transform:uppercase;letter-spacing:.05em;margin-top:6px;}
+  .stat.flag .n{color:var(--burgundy);}
+  .stat.watch .n{color:var(--ochre);}
+  .stat.done .n{color:var(--steel);}
+  .stat.closed .n{color:var(--slate);}
+  .tabs{display:flex;gap:2px;border-bottom:1px solid var(--rule);margin-bottom:1.25rem;flex-wrap:wrap;}
+  .tab{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.02em;text-transform:uppercase;padding:9px 13px;cursor:pointer;color:var(--slate);border-bottom:2px solid transparent;user-select:none;}
+  .tab.active{color:var(--ink);border-bottom-color:var(--ink);}
+  .tab:hover{color:var(--ink);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .panel-intro{font-size:13px;color:var(--slate);margin:-4px 0 14px;line-height:1.5;}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;align-items:center;}
+  .controls input[type=text]{flex:1;min-width:200px;padding:8px 12px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:2px;}
+  .controls select{padding:8px 10px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:2px;}
+  .count{font-size:12px;color:var(--slate);font-family:'IBM Plex Mono',monospace;margin-bottom:.6rem;}
+  table{width:100%;border-collapse:collapse;background:var(--paper);}
+  thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);font-weight:500;padding:8px 9px;border-bottom:1px solid var(--ink);white-space:nowrap;}
+  tbody td{padding:7px 9px;font-size:12.8px;border-bottom:1px solid var(--rule);vertical-align:top;}
+  tbody tr:hover{background:var(--grey-bg);}
+  tbody tr.laa-flag{background:var(--ochre-bg);}
+  tbody tr.laa-flag:hover{background:#efe0bd;}
+  .no{font-family:'IBM Plex Mono',monospace;color:var(--slate);font-size:11.5px;}
+  .name{font-weight:500;}
+  .listtag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--slate);text-transform:uppercase;letter-spacing:.03em;}
+  .pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-family:'IBM Plex Mono',monospace;letter-spacing:.02em;white-space:nowrap;margin:1px 3px 1px 0;}
+  .pill-active{background:var(--forest-bg);color:var(--forest);}
+  .pill-notproc{background:var(--burgundy-bg);color:var(--burgundy);}
+  .pill-watch{background:var(--ochre-bg);color:var(--ochre);}
+  .pill-neutral{background:var(--grey-bg);color:var(--ink-soft);}
+  .pill-done{background:var(--steel-bg);color:var(--steel);}
+  .pill-cat-da{background:var(--burgundy-bg);color:var(--burgundy);}
+  .pill-cat-s8{background:var(--ochre-bg);color:var(--ochre);}
+  .pill-cat-care{background:var(--forest-bg);color:var(--forest);}
+  .pill-cat-tot{background:var(--plum-bg);color:var(--plum);}
+  .pill-cat-fin{background:var(--steel-bg);color:var(--steel);}
+  .pill-cat-other{background:var(--grey-bg);color:var(--ink-soft);}
+  .origcat{font-size:10.5px;color:var(--slate);margin-top:3px;font-style:italic;}
+  .month-tag{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--slate);}
+  .edit-select{font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:4px 6px;border:1px solid var(--rule);border-radius:2px;background:var(--paper);color:var(--ink);max-width:100%;}
+  .note-row{background:var(--grey-bg);}
+  .note-row textarea{width:100%;min-height:44px;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;padding:6px 8px;border:1px solid var(--rule);border-radius:2px;resize:vertical;}
+  .note-btn{font-family:'IBM Plex Mono',monospace;font-size:10.5px;background:none;border:1px solid var(--rule);padding:3px 8px;cursor:pointer;color:var(--ink-soft);border-radius:2px;}
+  .note-btn:hover{border-color:var(--ink);color:var(--ink);}
+  .expand-btn{background:none;border:none;cursor:pointer;color:var(--slate);font-size:11px;font-family:'IBM Plex Mono',monospace;padding:0;white-space:nowrap;}
+  .expand-btn:hover{color:var(--ink);}
+  .rec h3{font-family:'Source Serif 4',serif;font-size:18px;font-weight:600;margin:1.6rem 0 .5rem;}
+  .rec h3:first-child{margin-top:0;}
+  .rec p{font-size:14px;line-height:1.6;color:var(--ink-soft);margin:.3rem 0 .8rem;}
+  .rec ul{margin:.3rem 0 1rem;padding-left:1.2rem;}
+  .rec li{font-size:14px;line-height:1.6;color:var(--ink-soft);margin-bottom:.35rem;}
+  .rec .tagline{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ochre);font-family:'IBM Plex Mono',monospace;margin-bottom:2px;}
+  .divider{border:0;border-top:1px solid var(--rule);margin:1.75rem 0;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--slate);margin-bottom:10px;align-items:center;}
+  .legend .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle;}
+  footer{margin-top:2.5rem;padding-top:1rem;border-top:1px solid var(--rule);font-size:11px;color:var(--slate);font-family:'IBM Plex Mono',monospace;}
+  @media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr);}}
+
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;}
+  .tbtn{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.02em;padding:7px 12px;border:1px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:2px;cursor:pointer;}
+  .tbtn:hover{background:var(--ink);color:var(--paper);}
+  .tbtn.ghost{border-color:var(--rule);color:var(--ink-soft);}
+  .tbtn.ghost:hover{background:var(--grey-bg);color:var(--ink);border-color:var(--rule);}
+  .export-btn{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:6px 11px;border:1px solid var(--rule);background:var(--paper);color:var(--ink-soft);border-radius:2px;cursor:pointer;margin-left:auto;}
+  .export-btn:hover{border-color:var(--ink);color:var(--ink);}
+
+  #print-area{display:none;}
+  @media print{
+    body > *:not(#print-area){ display:none !important; }
+    #print-area{ display:block !important; }
+    @page{ margin:16mm; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div style="background:var(--forest);color:#fff;padding:10px 16px;border-radius:2px;margin-bottom:1.25rem;font-size:12.5px;line-height:1.5;">
+    <strong style="font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.05em;font-size:11px;">Template / demo — no real client data</strong><br>
+    Every name below is a placeholder ("Client 001" etc.) — this version is safe to host publicly, including on GitHub Pages. Do not paste real client names into this file if it's going anywhere public; keep populated versions on Dillex's internal storage only.
+  </div>
+
+  <div class="masthead">
+    <div>
+      <div class="firm">Dillex Solicitors — family law</div>
+      <h1>Case management docket</h1>
+      <div class="sub">Working copy, read from Clio Manage export</div>
+    </div>
+    <div class="date">Prepared 29 Jul 2026<br>Covers pre-May – Jul intake</div>
+  </div>
+
+  <div class="storage-note" id="storage-warning"></div>
+
+  <div class="toolbar">
+    <button class="tbtn" id="backup-btn">⬇ Backup edits (.json)</button>
+    <button class="tbtn ghost" id="restore-btn">⬆ Restore edits from backup</button>
+    <input type="file" id="restore-file" accept="application/json,.json" style="display:none;">
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="pipeline">Intake pipeline</div>
+    <div class="tab" data-tab="ongoing">Ongoing matters</div>
+    <div class="tab" data-tab="notproceeding">Not proceeding</div>
+    <div class="tab" data-tab="finished">Finished / concluded</div>
+    <div class="tab" data-tab="closed">Closed files</div>
+    <div class="tab" data-tab="quality">Data quality &amp; recommendations</div>
+    <div class="tab" data-tab="deploy">Using &amp; backing up this file</div>
+  </div>
+
+  <div class="panel active" id="panel-pipeline">
+    <div class="panel-intro">Every matter's category, status and legal aid position can be edited directly in the table — changing a status here is what moves a matter onto the Not proceeding, Finished or Closed pages.</div>
+    <div class="controls">
+      <input type="text" id="p-search" placeholder="Search by client name…">
+      <select id="p-month">
+        <option value="">All months</option>
+        <option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option>
+      </select>
+      <select id="p-category"><option value="">All categories</option></select>
+      <select id="p-source"><option value="">All sources</option></select>
+      <select id="p-status"><option value="">All statuses</option></select>
+      <button class="export-btn" id="p-export">⎙ Export shown rows as PDF</button>
+    </div>
+    <div class="count" id="p-count"></div>
+    <table>
+      <thead><tr><th>No.</th><th>Client</th><th>Month</th><th>Source</th><th>Category</th><th>Legal aid</th><th>Status</th><th></th></tr></thead>
+      <tbody id="p-body"></tbody>
+    </table>
+  </div>
+
+  <div class="panel" id="panel-ongoing">
+    <div class="panel-intro">Live matters being actively worked. Update the status column as a matter wraps up to move it onto the Finished or Closed pages.</div>
+    <div class="controls">
+      <input type="text" id="o-search" placeholder="Search by client name…">
+      <select id="o-month">
+        <option value="">All months</option>
+        <option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option>
+      </select>
+      <select id="o-status"><option value="">All statuses</option></select>
+      <button class="export-btn" id="o-export">⎙ Export shown rows as PDF</button>
+    </div>
+    <div class="count" id="o-count"></div>
+    <table>
+      <thead><tr><th>No.</th><th>Client</th><th>Month</th><th>Next action / detail</th><th>Legal aid</th><th>Court</th><th>Status</th><th></th></tr></thead>
+      <tbody id="o-body"></tbody>
+    </table>
+  </div>
+
+  <div class="panel" id="panel-notproceeding">
+    <div class="panel-intro">Matters marked "not proceeding" from either list, combined. Rows highlighted amber have legal aid applied for or granted — those need a funding notification / cost report before the file is fully closed.</div>
+    <div class="legend"><span><span class="sw" style="background:var(--ochre-bg);border:1px solid var(--ochre);"></span>Legal aid in place — needs closing off</span></div>
+    <div class="controls">
+      <select id="np-month">
+        <option value="">All months</option><option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option>
+      </select>
+      <button class="export-btn" id="np-export">⎙ Export shown rows as PDF</button>
+    </div>
+    <div class="count" id="np-count"></div>
+    <table>
+      <thead><tr><th>No.</th><th>Client</th><th>List</th><th>Month</th><th>Detail</th><th>Legal aid</th><th>Move to</th><th></th></tr></thead>
+      <tbody id="np-body"></tbody>
+    </table>
+  </div>
+
+  <div class="panel" id="panel-finished">
+    <div class="panel-intro">Matters marked "finished / concluded" — work completed, outcome achieved. Distinct from "closed" so you can see recently concluded matters before archiving.</div>
+    <div class="controls">
+      <select id="f-month">
+        <option value="">All months</option><option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option>
+      </select>
+      <button class="export-btn" id="f-export">⎙ Export shown rows as PDF</button>
+    </div>
+    <div class="count" id="f-count"></div>
+    <table>
+      <thead><tr><th>No.</th><th>Client</th><th>List</th><th>Month</th><th>Detail</th><th>Legal aid</th><th>Move to</th><th></th></tr></thead>
+      <tbody id="f-body"></tbody>
+    </table>
+  </div>
+
+  <div class="panel" id="panel-closed">
+    <div class="panel-intro">Fully closed files — administratively wrapped up, nothing outstanding.</div>
+    <div class="controls">
+      <select id="c-month">
+        <option value="">All months</option><option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option>
+      </select>
+      <button class="export-btn" id="c-export">⎙ Export shown rows as PDF</button>
+    </div>
+    <div class="count" id="c-count"></div>
+    <table>
+      <thead><tr><th>No.</th><th>Client</th><th>List</th><th>Month</th><th>Detail</th><th>Legal aid</th><th>Move to</th><th></th></tr></thead>
+      <tbody id="c-body"></tbody>
+    </table>
+  </div>
+
+  <div class="panel" id="panel-quality">
+    <div class="rec">
+      <div class="tagline">Structural gap</div>
+      <h3>One ledger is doing two jobs</h3>
+      <p>The intake list (99 matters) and the ongoing/active list (29 matters) are kept as two separate, independently-numbered tables with no shared case ID linking them. Three names in the ongoing table — Emily Curd, Mahjbeen Arif, Samantha Castell — don't appear on the intake list at all.</p>
+      <ul>
+        <li>Give every matter one case number at intake and carry it through to the ongoing tracker.</li>
+        <li>Add the three untraceable names to the intake list retrospectively, or note them as opened before the log started.</li>
+      </ul>
+
+      <div class="tagline">Category coverage</div>
+      <h3>Most matters have no family law category recorded at intake</h3>
+      <p>Around 60 of the 99 intake rows carry no matter type at all, even though most arrived via NCDV or CourtNav — routes that are almost always domestic abuse work. A few matters genuinely span more than one category (Gifty Nicholson: domestic abuse, section 8 and financials together); editing now collapses these to a single primary category, with the original combination kept as a caption underneath.</p>
+      <ul>
+        <li>Make category a required field at intake, chosen from the fixed list, rather than typed freely.</li>
+        <li>Naila Nawaz's matter includes a forced marriage protection element that doesn't sit under any of the five categories as given — worth deciding whether that's folded into domestic abuse or tracked separately.</li>
+      </ul>
+
+      <div class="tagline">Status hygiene</div>
+      <h3>Three status pages now exist — worth agreeing what each means</h3>
+      <p>This version splits closure into three states: <strong>not proceeding</strong> (client didn't go ahead — pre-issue), <strong>finished/concluded</strong> (matter ran its course, outcome reached), and <strong>closed</strong> (file administratively wrapped up). That's a reasonable three-way split for a family law caseload, but it only works if everyone uses the categories the same way — worth a one-line house rule so "not proceeding" isn't used interchangeably with "closed".</p>
+      <ul>
+        <li>Legal aid matters marked not proceeding need a funding closure step before they can move to closed — that's why the not proceeding page flags them separately.</li>
+        <li>Charlie May Perry is flagged "no response" — worth a decision point (chase again vs mark not proceeding) rather than sitting indefinitely.</li>
+      </ul>
+
+      <div class="tagline">Data entry</div>
+      <h3>A likely typo and two unresolved uncertainty markers</h3>
+      <p>Entry 38 (Andronikos Temenes) is logged under "MNO" where every comparable entry uses "NMO". Two entries carry a "???" against the matter type (Collette Massey, Portia French) that was never resolved.</p>
+
+      <div class="tagline">Coverage</div>
+      <h3>Legal aid position wasn't tracked at all before July</h3>
+      <p>Legal aid state is now editable on every matter, but the underlying source data only ever recorded it for July's ongoing matters — everything else defaults to "Unknown" until someone fills it in. Given legal aid status directly affects how a "not proceeding" file needs to be closed off, this is probably the single highest-value field to backfill.</p>
+
+      <hr class="divider">
+      <p style="font-size:12.5px;color:var(--slate);">Categories follow Dillex's family law structure: domestic abuse (non-molestation and occupation order applications), section 8 orders (child arrangements, specific issues and prohibited steps orders), care proceedings, transfer of tenancy, and financials/divorce.</p>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-deploy">
+    <div class="rec">
+      <div class="tagline">What this file is</div>
+      <h3>A self-contained page, not a connected app</h3>
+      <p>This is a single HTML file with the docket data written into it. It doesn't need installing, doesn't need an internet connection, and doesn't talk to Clio or anyone else's computer. Opening it means double-clicking the file. It's a snapshot: it shows the docket as it stood on 29 Jul 2026 and won't update itself as Clio changes.</p>
+
+      <div class="tagline">Storing and backing it up</div>
+      <h3>Treat it exactly like a Word or Excel file</h3>
+      <ul>
+        <li>Save it wherever Dillex's normal backup already covers — network drive, firm OneDrive/SharePoint, or the same location other case documents live.</li>
+        <li>To share with a colleague, send the single .html file — nothing else is needed.</li>
+        <li>To refresh it with up-to-date figures later, ask again with the latest export — it can be regenerated, not synced.</li>
+      </ul>
+
+      <div class="tagline">Editing categories, status, legal aid and notes</div>
+      <h3>All edits save to this PC and this file location only</h3>
+      <p>Every dropdown and note box on this page saves to the browser's local storage, tied to this exact file in this exact folder on this exact computer. Practically:</p>
+      <ul>
+        <li>Your edits will still be there next time you open this exact file from this exact location on this PC.</li>
+        <li>They will <strong>not</strong> appear if the file is copied elsewhere, moved, or opened by a colleague from their own copy — each copy keeps its own separate edits.</li>
+        <li>Clearing browser site data, or switching browsers, will also clear them.</li>
+      </ul>
+      <p>Treat this as a fast working view for one person to triage and annotate the docket — Clio remains the system of record. If several people need to edit the same live list together, that needs an actual shared, permissioned system rather than a static file; happy to talk through options if useful.</p>
+
+      <div class="tagline">Given the subject matter</div>
+      <h3>Handle the file the way you'd handle any client-identifiable case list</h3>
+      <ul>
+        <li>Keep it inside Dillex's normal secure storage rather than personal cloud accounts, personal email, or an uncovered personal device.</li>
+        <li>Delete or archive old snapshots properly rather than letting stray copies with client names sit in downloads folders.</li>
+      </ul>
+
+      <div class="tagline">New: backup and restore</div>
+      <h3>"Backup edits" saves your changes as a small file you can keep separately</h3>
+      <p>The <strong>Backup edits (.json)</strong> button at the top downloads everything you've changed — categories, statuses, legal aid positions, notes — as a small JSON file, separate from the dashboard itself. <strong>Restore edits from backup</strong> reads that file back in. This exists for two situations:</p>
+      <ul>
+        <li>You're given a freshly regenerated copy of this dashboard (say, after August's intake is added) and want to reapply the edits you'd already made, rather than redoing them from scratch. This only lines up correctly if the case numbers haven't changed between versions.</li>
+        <li>You want a second copy of your edits somewhere safer than one browser's local storage, before clearing your browser data or moving to a new PC.</li>
+      </ul>
+      <p>The backup file only contains your edits, not the underlying docket — it's meaningless without a copy of this dashboard to restore them into.</p>
+
+      <div class="tagline">New: export to PDF</div>
+      <h3>Every page can be printed to PDF, filtered by month</h3>
+      <p>Each page has an <strong>Export shown rows as PDF</strong> button. It respects whatever filters are currently set — so selecting "July" on the Not proceeding page and exporting gives you a PDF of just July's not-proceeding matters. Clicking it opens your browser's normal print dialog; choose "Save as PDF" (or "Microsoft Print to PDF" on Windows) as the destination instead of a physical printer. This uses the browser's built-in printing, not an external service, so it works offline.</p>
+
+      <div class="tagline">Hosting this as a webpage — worth real caution here</div>
+      <h3>GitHub Pages can technically host it, but not with real client data on it</h3>
+      <p>Because this is a single static HTML file, GitHub Pages genuinely can serve it as a URL-accessible page — that part's straightforward. The problem is what GitHub Pages sites are visible to: on a standard GitHub account, a Pages site is publicly reachable by anyone with the URL, regardless of whether the underlying repository is marked private — GitHub only restricts Pages access behind sign-in for Enterprise Cloud organisations with that feature enabled, not for ordinary free or personal-plan repos.</p>
+      <p>That means publishing this file as-is would put real, named domestic abuse, care proceedings and financial matter clients on the open internet — a serious confidentiality problem and very likely a data protection breach, independent of anything to do with GitHub specifically.</p>
+      <ul>
+        <li>If a browser-accessible version genuinely helps, the safer route is hosting it somewhere access-controlled that Dillex already uses — the firm intranet, a password-protected SharePoint site, or an internal server — not a public static host.</li>
+        <li>GitHub Pages is a reasonable place to host a <strong>template</strong> version of this tool with placeholder names and no real client data, if the goal is to demonstrate or reuse the structure — happy to prepare that version separately if useful.</li>
+        <li>Genuinely private, multi-user hosting (so several people at the firm can view and edit the same live list) is a different kind of project — a small web app with real access control and a database — rather than a static file on any free host.</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>Dillex Solicitors · Clio Manage docket working copy · not a substitute for the source system of record</footer>
+</div>
+
+<div id="print-area"></div>
+
+<script>
+const CATS = ["Domestic abuse","Section 8 orders","Care proceedings","Transfer of tenancy","Financials / divorce","Other","Unspecified"];
+const STATUSES = ["Active","Not proceeding","No response","Transferred out","Finished / concluded","Closed"];
+const LAAS = ["Unknown","Not applied","Applied","Granted","Refused","N/A - private client"];
+
+const PIPELINE_RAW = [
+["1","Client 001","PRE-MAY","NCDV","Unspecified","Active"],
+["2","Client 002","PRE-MAY","Direct","Unspecified","Active"],
+["3","Client 003","PRE-MAY","NCDV","Unspecified","Active"],
+["4","Client 004","PRE-MAY","NCDV","Unspecified","Active"],
+["5","Client 005","PRE-MAY","Direct","Unspecified","Active"],
+["6","Client 006","PRE-MAY","Direct","Unspecified","Active"],
+["7","Client 007","PRE-MAY","Direct","Section 8 orders + Other (forced marriage)","Active"],
+["8","Client 008","PRE-MAY","Direct","Unspecified","Active"],
+["9","Client 009","PRE-MAY","Direct","Unspecified","Active"],
+["10","Client 010","PRE-MAY","NCDV","Unspecified","Active"],
+["11","Client 011","PRE-MAY","NCDV","Unspecified","Active"],
+["12","Client 012","PRE-MAY","CourtNav","Unspecified","Active"],
+["13","Client 013","PRE-MAY","NCDV","Unspecified","Active"],
+["14","Client 014","PRE-MAY","Direct","Unspecified","Active"],
+["15","Client 015","PRE-MAY","CourtNav","Unspecified","Active"],
+["16","Client 016","PRE-MAY","Direct","Unspecified","Active"],
+["17","Client 017","PRE-MAY","Direct","Transfer of tenancy (inferred)","Active"],
+["18","Client 018","PRE-MAY","Direct","Domestic abuse + Section 8 orders + Financials / divorce","Active"],
+["19","Client 019","PRE-MAY","Direct","Domestic abuse","Active"],
+["20","Client 020","PRE-MAY","Direct","Domestic abuse","Not proceeding"],
+["21","Client 021","PRE-MAY","Direct","Domestic abuse","Active"],
+["22","Client 022","PRE-MAY","NCDV","Domestic abuse","Active"],
+["23","Client 023","PRE-MAY","NCDV","Domestic abuse","Active"],
+["24","Client 024","PRE-MAY","NCDV","Domestic abuse","Not proceeding"],
+["25","Client 025","PRE-MAY","NCDV","Domestic abuse","Active"],
+["26","Client 026","PRE-MAY","NCDV","Domestic abuse","Active"],
+["27","Client 027","PRE-MAY","NCDV","Domestic abuse (unconfirmed)","Not proceeding"],
+["28","Client 028","PRE-MAY","NCDV","Unspecified","Active"],
+["29","Client 029","PRE-MAY","NCDV","Unspecified","Not proceeding"],
+["30","Client 030","PRE-MAY","CourtNav","Unspecified","Not proceeding"],
+["31","Client 031","PRE-MAY","NCDV","Unspecified","Active"],
+["32","Client 032","PRE-MAY","NCDV","Unspecified","Active"],
+["33","Client 033","PRE-MAY","CourtNav","Domestic abuse (unconfirmed)","Active"],
+["34","Client 034","PRE-MAY","NCDV","Domestic abuse","Active"],
+["35","Client 035","PRE-MAY","NCDV","Unspecified","Active"],
+["36","Client 036","PRE-MAY","NCDV","Domestic abuse","Not proceeding"],
+["37","Client 037","PRE-MAY","Direct","Domestic abuse","Active"],
+["38","Client 038","PRE-MAY","Direct","Domestic abuse (logged as MNO)","Active"],
+["39","Client 039","PRE-MAY","Direct","Domestic abuse + Section 8 orders","Active"],
+["40","Client 040","PRE-MAY","Direct","Domestic abuse","Active"],
+["41","Client 041","PRE-MAY","Direct","Domestic abuse + Section 8 orders","Active"],
+["42","Client 042","PRE-MAY","Direct","Unspecified","Active"],
+["43","Client 043","PRE-MAY","Direct","Domestic abuse","Active"],
+["44","Client 044","PRE-MAY","Direct","Domestic abuse","Not proceeding"],
+["45","Client 045","PRE-MAY","Direct","Domestic abuse","Not proceeding"],
+["46","Client 046","PRE-MAY","Direct","Domestic abuse","Active"],
+["47","Client 047","PRE-MAY","NCDV","Domestic abuse","Active"],
+["48","Client 048","PRE-MAY","NCDV","Domestic abuse","No response"],
+["49","Client 049","PRE-MAY","NCDV","Domestic abuse","Active"],
+["50","Client 050","PRE-MAY","NCDV","Domestic abuse","Active"],
+["51","Client 051","PRE-MAY","NCDV","Domestic abuse","Active"],
+["52","Client 052","PRE-MAY","NCDV","Domestic abuse","Active"],
+["53","Client 053","PRE-MAY","NCDV","Domestic abuse","Active"],
+["54","Client 054","PRE-MAY","NCDV","Domestic abuse","Active"],
+["55","Client 055","PRE-MAY","CourtNav","Domestic abuse","Active"],
+["56","Client 056","PRE-MAY","Direct","Unspecified","Active"],
+["57","Client 057","PRE-MAY","NCDV","Unspecified","Active"],
+["58","Client 058","PRE-MAY","CourtNav","Domestic abuse","Active"],
+["59","Client 059","PRE-MAY","CourtNav","Domestic abuse","Active"],
+["60","Client 060","PRE-MAY","Direct","Unspecified","Active"],
+["61","Client 061","PRE-MAY","Direct","Unspecified","Active"],
+["62","Client 062","PRE-MAY","Direct","Unspecified","Active"],
+["63","Client 063","PRE-MAY","Direct","Unspecified","Active"],
+["64","Client 064","PRE-MAY","Direct","Unspecified","Active"],
+["65","Client 065","PRE-MAY","Direct","Unspecified","Active"],
+["66","Client 066","PRE-MAY","Direct","Unspecified","Active"],
+["67","Client 067","PRE-MAY","Direct","Unspecified","Active"],
+["68","Client 068","PRE-MAY","Direct","Unspecified","Active"],
+["69","Client 069","PRE-MAY","Direct","Unspecified","Active"],
+["70","Client 070","PRE-MAY","Direct","Unspecified","Active"],
+["71","Client 071","PRE-MAY","Direct","Unspecified","Active"],
+["72","Client 072","MAY","ISAAC","Unspecified","Active"],
+["73","Client 073","MAY","ISAAC","Unspecified","Active"],
+["74","Client 074","MAY","ISAAC","Unspecified","Active"],
+["75","Client 075","MAY","ISAAC","Unspecified","Active"],
+["76","Client 076","MAY","NCDV","Unspecified","Active"],
+["77","Client 077","MAY","Direct","Care proceedings","Active"],
+["78","Client 078","MAY","Direct","Unspecified","Active"],
+["79","Client 079","JUNE","Direct","Domestic abuse","Active"],
+["80","Client 080","JUNE","Direct","Domestic abuse","Active"],
+["81","Client 081","JUNE","Direct","Unspecified","Active"],
+["82","Client 082","JUNE","Direct","Domestic abuse","Active"],
+["83","Client 083","JUNE","NCDV","Domestic abuse","Active"],
+["84","Client 084","JUNE","Direct","Unspecified","Active"],
+["85","Client 085","JUNE","Direct","Unspecified","Active"],
+["86","Client 086","JULY","Referral","Unspecified","Active"],
+["87","Client 087","JULY","NCDV","Unspecified","Active"],
+["88","Client 088","JULY","Referral","Unspecified","Active"],
+["89","Client 089","JULY","Referral","Unspecified","Active"],
+["90","Client 090","JULY","Referral","Unspecified","Active"],
+["91","Client 091","JULY","Referral","Unspecified","Active"],
+["92","Client 092","JULY","Referral","Unspecified","Active"],
+["93","Client 093","JULY","NCDV","Unspecified","Active"],
+["94","Client 094","JULY","NCDV","Unspecified","Active"],
+["95","Client 095","JULY","NCDV","Unspecified","Active"],
+["96","Client 096","JULY","Referral","Unspecified","Active"],
+["97","Client 097","JULY","Referral","Unspecified","Active"],
+["98","Client 098","JULY","Referral","Unspecified","Transferred out"],
+["99","Client 099","JULY","CourtNav","Unspecified","Active"]
+];
+
+const ONGOING_RAW = [
+["1","Client 007","PRE-MAY","Forced marriage, CAO, PSO — amended LAA","Unknown",""],
+["2","Client 017","PRE-MAY","TOT 15 Jun — R statement — barrister booked","Unknown",""],
+["3","Client 018","PRE-MAY","Finance — 23 Jul — barrister booked","Unknown",""],
+["4","Client 050","PRE-MAY","Listed 28 Apr","Unknown",""],
+["5","Client X01","PRE-MAY","Chasing NOH","Unknown",""],
+["6","Client X02","PRE-MAY","Amend LAA — vary order (not on intake list)","Unknown",""],
+["7","Client 039","PRE-MAY","CAO — next hearing 10 Jun — counsel booked","Unknown",""],
+["8","Client X03","PRE-MAY","CAO (not on intake list)","Unknown",""],
+["9","Client X04","PRE-MAY","Listed 21 May (not on intake list)","Unknown",""],
+["10","Client 067","PRE-MAY","Amend witness statement","Unknown",""],
+["11","Client 077","MAY","Care matter","Unknown",""],
+["12","Client 078","MAY","","Unknown",""],
+["13","Client 082","JUNE","NMO","Unknown",""],
+["14","Client 083","JUNE","NMO","Unknown",""],
+["15","Client 084","JUNE","","Unknown",""],
+["16","Client 085","JUNE","","Unknown",""],
+["17","Client 086","JULY","","Applied","No"],
+["18","Client 087","JULY","Court date 31 Jul","Applied","Yes"],
+["19","Client 088","JULY","","Applied","No / Yes"],
+["20","Client 093","JULY","","Not applied",""],
+["21","Client 089","JULY","","Applied","Yes"],
+["22","Client 090","JULY","","Applied","Yes"],
+["23","Client 091","JULY","","Applied","Yes"],
+["24","Client 092","JULY","Court date 5 Aug","Applied","Yes"],
+["25","Client 095","JULY","","Applied","No"],
+["26","Client 096","JULY","","Applied","Yes"],
+["27","Client 097","JULY","","Applied","Yes"],
+["28","Client 098","JULY","Instructed CSS Law — another firm","N/A - private client","No"],
+["29","Client 099","JULY","","Unknown",""]
+];
+
+let storageOK = true;
+try{ localStorage.setItem('__t__','1'); localStorage.removeItem('__t__'); }catch(e){ storageOK = false; }
+const warn = document.getElementById('storage-warning');
+if(storageOK){
+  warn.textContent = 'Category, status, legal aid and note edits below save to this browser, tied to this file. See "Using & backing up this file" for what that means if the file is copied or shared.';
+}else{
+  warn.classList.add('blocked');
+  warn.textContent = 'This browser is blocking local storage for this file, so edits and notes below won\u2019t be saved between visits. Everything else works normally.';
+}
+
+function getOverride(field, id){
+  if(!storageOK) return null;
+  try{ return localStorage.getItem('dillex-'+field+'-'+id); }catch(e){ return null; }
+}
+function setOverride(field, id, val){
+  if(!storageOK) return;
+  try{ localStorage.setItem('dillex-'+field+'-'+id, val); }catch(e){}
+}
+
+function baseCategory(str){
+  if(str.indexOf('Domestic abuse')>-1) return 'Domestic abuse';
+  if(str.indexOf('Section 8')>-1) return 'Section 8 orders';
+  if(str.indexOf('Care')>-1) return 'Care proceedings';
+  if(str.indexOf('Transfer of tenancy')>-1) return 'Transfer of tenancy';
+  if(str.indexOf('Financials')>-1) return 'Financials / divorce';
+  if(str.indexOf('Other')>-1) return 'Other';
+  return 'Unspecified';
+}
+
+// Build unified matter objects
+const PIPELINE = PIPELINE_RAW.map(r=>{
+  const id = 'p'+r[0];
+  return {
+    id, list:'Intake', no:r[0], name:r[1], month:r[2], source:r[3],
+    origCategory:r[4],
+    category: getOverride('cat',id) || baseCategory(r[4]),
+    legalAid: getOverride('laa',id) || 'Unknown',
+    status: getOverride('status',id) || r[5],
+    detail:''
+  };
+});
+
+const ONGOING = ONGOING_RAW.map(r=>{
+  const id = 'o'+r[0];
+  return {
+    id, list:'Ongoing', no:r[0], name:r[1], month:r[2], source:'',
+    origCategory:'',
+    category:'',
+    detail:r[3],
+    legalAid: getOverride('laa',id) || r[4],
+    court: getOverride('court',id) || r[5],
+    status: getOverride('status',id) || 'Active'
+  };
+});
+
+const ALL = PIPELINE.concat(ONGOING);
+
+function optionList(options, current, onchange){
+  const sel = document.createElement('select');
+  sel.className = 'edit-select';
+  options.forEach(o=>{
+    const opt = document.createElement('option');
+    opt.value = o; opt.textContent = o;
+    if(o===current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', ()=>onchange(sel.value));
+  return sel;
+}
+
+function pillClassStatus(status){
+  if(status==='Not proceeding') return 'pill-notproc';
+  if(status==='No response') return 'pill-watch';
+  if(status==='Transferred out') return 'pill-neutral';
+  if(status==='Finished / concluded') return 'pill-done';
+  if(status==='Closed') return 'pill-neutral';
+  return 'pill-active';
+}
+function catPillClass(cat){
+  if(cat==='Domestic abuse') return 'pill-cat-da';
+  if(cat==='Section 8 orders') return 'pill-cat-s8';
+  if(cat==='Care proceedings') return 'pill-cat-care';
+  if(cat==='Transfer of tenancy') return 'pill-cat-tot';
+  if(cat==='Financials / divorce') return 'pill-cat-fin';
+  return 'pill-cat-other';
+}
+
+function hasLegalAid(m){
+  return m.legalAid==='Applied' || m.legalAid==='Granted';
+}
+
+// populate filter dropdowns
+function fillSelect(selId, values, allLabel){
+  const el = document.getElementById(selId);
+  el.innerHTML = `<option value="">${allLabel}</option>` + values.map(v=>`<option value="${v}">${v}</option>`).join('');
+}
+fillSelect('p-category', CATS, 'All categories');
+fillSelect('p-status', STATUSES, 'All statuses');
+fillSelect('o-status', STATUSES, 'All statuses');
+const sources = [...new Set(PIPELINE.map(m=>m.source))].sort();
+fillSelect('p-source', sources, 'All sources');
+
+function renderStats(){
+  const total = PIPELINE.length;
+  const active = ALL.filter(m=>m.status==='Active').length;
+  const notProc = ALL.filter(m=>m.status==='Not proceeding').length;
+  const finished = ALL.filter(m=>m.status==='Finished / concluded').length;
+  const closed = ALL.filter(m=>m.status==='Closed').length;
+  const daCount = PIPELINE.filter(m=>m.category==='Domestic abuse').length;
+  const el = document.getElementById('stats');
+  const cells = [
+    ['Total intake, pre-May – Jul', total, ''],
+    ['Currently active', active, ''],
+    ['Not proceeding', notProc, 'flag'],
+    ['Finished / concluded', finished, 'done'],
+    ['Closed files', closed, 'closed'],
+    ['Domestic abuse matters', daCount, 'watch']
+  ];
+  el.innerHTML = cells.map(c=>`<div class="stat ${c[2]}"><div class="n">${c[1]}</div><div class="l">${c[0]}</div></div>`).join('');
+}
+
+function noteRowHtml(id, colspan){
+  const val = getOverride('note', id) || '';
+  return `<tr class="note-row" id="note-${id}" style="display:none;"><td colspan="${colspan}">
+    <textarea id="ta-${id}" placeholder="Add a working note for this matter...">${val}</textarea>
+    <div style="margin-top:6px;"><button class="note-btn" onclick="saveNote('${id}')">Save note</button></div>
+  </td></tr>`;
+}
+window.saveNote = function(id){
+  const val = document.getElementById('ta-'+id).value;
+  setOverride('note', id, val);
+  const btn = document.querySelector(`#note-${id} .note-btn`);
+  if(btn){ const old = btn.textContent; btn.textContent = storageOK ? 'Saved' : 'Not saved'; setTimeout(()=>btn.textContent=old, 1300); }
+};
+window.toggleNote = function(id){
+  const row = document.getElementById('note-'+id);
+  if(row) row.style.display = row.style.display==='none' ? 'table-row' : 'none';
+};
+
+function renderAll(){
+  renderStats();
+  renderPipeline();
+  renderOngoing();
+  renderStatusPage('notproceeding','np','Not proceeding');
+  renderStatusPage('finished','f','Finished / concluded');
+  renderStatusPage('closed','c','Closed');
+}
+
+function filterPipeline(){
+  const q = document.getElementById('p-search').value.trim().toLowerCase();
+  const month = document.getElementById('p-month').value;
+  const source = document.getElementById('p-source').value;
+  const status = document.getElementById('p-status').value;
+  const category = document.getElementById('p-category').value;
+  return PIPELINE.filter(m=>{
+    if(q && !m.name.toLowerCase().includes(q)) return false;
+    if(month && m.month!==month) return false;
+    if(source && m.source!==source) return false;
+    if(status && m.status!==status) return false;
+    if(category && m.category!==category) return false;
+    return true;
+  });
+}
+
+function renderPipeline(){
+  const rows = filterPipeline();
+  document.getElementById('p-count').textContent = rows.length + ' of ' + PIPELINE.length + ' matters shown';
+  const body = document.getElementById('p-body');
+  body.innerHTML = '';
+  rows.forEach(m=>{
+    const tr = document.createElement('tr');
+    const origNote = (m.origCategory && baseCategory(m.origCategory)!==m.category) || m.origCategory.indexOf(' + ')>-1
+      ? `<div class="origcat">originally recorded: ${m.origCategory}</div>` : '';
+    tr.innerHTML = `
+      <td class="no">${m.no}</td>
+      <td class="name">${m.name}</td>
+      <td class="month-tag">${m.month}</td>
+      <td>${m.source||'—'}</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td><button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button></td>`;
+    const catTd = tr.children[4];
+    catTd.appendChild(optionList(CATS, m.category, v=>{ m.category=v; setOverride('cat',m.id,v); renderAll(); }));
+    catTd.insertAdjacentHTML('beforeend', origNote);
+    const laaTd = tr.children[5];
+    laaTd.appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
+    const statTd = tr.children[6];
+    statTd.appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
+    body.appendChild(tr);
+    body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 8));
+  });
+  if(rows.length===0) body.innerHTML = '<tr><td colspan="8" style="color:var(--slate);padding:20px 10px;">No matters match this filter.</td></tr>';
+}
+
+function filterOngoing(){
+  const q = document.getElementById('o-search').value.trim().toLowerCase();
+  const month = document.getElementById('o-month').value;
+  const status = document.getElementById('o-status').value;
+  return ONGOING.filter(m=>{
+    if(q && !m.name.toLowerCase().includes(q)) return false;
+    if(month && m.month!==month) return false;
+    if(status && m.status!==status) return false;
+    return true;
+  });
+}
+
+function renderOngoing(){
+  const rows = filterOngoing();
+  document.getElementById('o-count').textContent = rows.length + ' of ' + ONGOING.length + ' matters shown';
+  const body = document.getElementById('o-body');
+  body.innerHTML = '';
+  rows.forEach(m=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="no">${m.no}</td>
+      <td class="name">${m.name}</td>
+      <td class="month-tag">${m.month}</td>
+      <td>${m.detail||'—'}</td>
+      <td></td>
+      <td>${m.court||'<span style="color:var(--slate)">—</span>'}</td>
+      <td></td>
+      <td><button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button></td>`;
+    const laaTd = tr.children[4];
+    laaTd.appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
+    const statTd = tr.children[6];
+    statTd.appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
+    body.appendChild(tr);
+    body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 8));
+  });
+  if(rows.length===0) body.innerHTML = '<tr><td colspan="8" style="color:var(--slate);padding:20px 10px;">No matters match this filter.</td></tr>';
+}
+
+function filterStatusPage(prefix, statusValue){
+  const monthEl = document.getElementById(prefix+'-month');
+  const month = monthEl ? monthEl.value : '';
+  return ALL.filter(m=>{
+    if(m.status!==statusValue) return false;
+    if(month && m.month!==month) return false;
+    return true;
+  });
+}
+
+function renderStatusPage(panelSuffix, prefix, statusValue){
+  const rows = filterStatusPage(prefix, statusValue);
+  document.getElementById(prefix+'-count').textContent = rows.length + ' matter' + (rows.length===1?'':'s');
+  const body = document.getElementById(prefix+'-body');
+  body.innerHTML = '';
+  rows.forEach(m=>{
+    const tr = document.createElement('tr');
+    if(statusValue==='Not proceeding' && hasLegalAid(m)) tr.classList.add('laa-flag');
+    const detail = m.list==='Intake' ? (m.category||'—') : (m.detail||'—');
+    tr.innerHTML = `
+      <td class="no">${m.no}</td>
+      <td class="name">${m.name}</td>
+      <td class="listtag">${m.list}</td>
+      <td class="month-tag">${m.month}</td>
+      <td>${detail}</td>
+      <td></td>
+      <td></td>
+      <td><button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button></td>`;
+    const laaTd = tr.children[5];
+    laaTd.appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
+    const moveTd = tr.children[6];
+    moveTd.appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
+    body.appendChild(tr);
+    body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 8));
+  });
+  if(rows.length===0) body.innerHTML = '<tr><td colspan="8" style="color:var(--slate);padding:20px 10px;">No matters with this status.</td></tr>';
+}
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+  });
+});
+
+['p-search','p-month','p-source','p-status','p-category'].forEach(id=>document.getElementById(id).addEventListener('input', renderPipeline));
+['o-search','o-month','o-status'].forEach(id=>document.getElementById(id).addEventListener('input', renderOngoing));
+document.getElementById('np-month').addEventListener('change', ()=>renderStatusPage('notproceeding','np','Not proceeding'));
+document.getElementById('f-month').addEventListener('change', ()=>renderStatusPage('finished','f','Finished / concluded'));
+document.getElementById('c-month').addEventListener('change', ()=>renderStatusPage('closed','c','Closed'));
+
+// ---------- PDF export (print) ----------
+function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+function buildPrintHtml(title, subtitle, columns, rows){
+  let h = '<div style="font-family:\'IBM Plex Sans\',Arial,sans-serif;color:#182842;">';
+  h += '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#96702A;margin-bottom:4px;">Dillex Solicitors — family law</div>';
+  h += '<h1 style="font-family:\'Source Serif 4\',Georgia,serif;font-size:20px;margin:0 0 4px;">'+esc(title)+'</h1>';
+  h += '<div style="font-size:10.5px;color:#666f7d;margin-bottom:14px;">'+esc(subtitle)+' · generated '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})+' · '+rows.length+' matter'+(rows.length===1?'':'s')+'</div>';
+  h += '<table style="width:100%;border-collapse:collapse;font-size:10.5px;"><thead><tr>';
+  columns.forEach(c=>h+='<th style="text-align:left;border-bottom:1px solid #182842;padding:4px 6px;text-transform:uppercase;letter-spacing:.03em;color:#666f7d;font-size:9px;">'+esc(c)+'</th>');
+  h += '</tr></thead><tbody>';
+  rows.forEach(r=>{
+    h += '<tr>' + r.map(v=>'<td style="border-bottom:1px solid #DCD5C4;padding:4px 6px;vertical-align:top;">'+esc(v)+'</td>').join('') + '</tr>';
+  });
+  h += '</tbody></table></div>';
+  return h;
+}
+
+function printRows(title, subtitle, columns, rows){
+  const area = document.getElementById('print-area');
+  area.innerHTML = buildPrintHtml(title, subtitle, columns, rows);
+  window.print();
+}
+
+function monthLabel(prefix){
+  const el = document.getElementById(prefix+'-month');
+  if(!el || !el.value) return 'All months';
+  const map = {'PRE-MAY':'Pre-May','MAY':'May','JUNE':'June','JULY':'July'};
+  return map[el.value] || el.value;
+}
+
+document.getElementById('p-export').addEventListener('click', ()=>{
+  const rows = filterPipeline();
+  const cols = ['No.','Client','Month','Source','Category','Legal aid','Status'];
+  const data = rows.map(m=>[m.no,m.name,m.month,m.source,m.category,m.legalAid,m.status]);
+  printRows('Intake pipeline', monthLabel('p'), cols, data);
+});
+document.getElementById('o-export').addEventListener('click', ()=>{
+  const rows = filterOngoing();
+  const cols = ['No.','Client','Month','Detail','Legal aid','Court','Status'];
+  const data = rows.map(m=>[m.no,m.name,m.month,m.detail,m.legalAid,m.court,m.status]);
+  printRows('Ongoing matters', monthLabel('o'), cols, data);
+});
+document.getElementById('np-export').addEventListener('click', ()=>{
+  const rows = filterStatusPage('np','Not proceeding');
+  const cols = ['No.','Client','List','Month','Detail','Legal aid'];
+  const data = rows.map(m=>[m.no,m.name,m.list,m.month,(m.list==='Intake'?m.category:m.detail),m.legalAid]);
+  printRows('Not proceeding', monthLabel('np'), cols, data);
+});
+document.getElementById('f-export').addEventListener('click', ()=>{
+  const rows = filterStatusPage('f','Finished / concluded');
+  const cols = ['No.','Client','List','Month','Detail','Legal aid'];
+  const data = rows.map(m=>[m.no,m.name,m.list,m.month,(m.list==='Intake'?m.category:m.detail),m.legalAid]);
+  printRows('Finished / concluded', monthLabel('f'), cols, data);
+});
+document.getElementById('c-export').addEventListener('click', ()=>{
+  const rows = filterStatusPage('c','Closed');
+  const cols = ['No.','Client','List','Month','Detail','Legal aid'];
+  const data = rows.map(m=>[m.no,m.name,m.list,m.month,(m.list==='Intake'?m.category:m.detail),m.legalAid]);
+  printRows('Closed files', monthLabel('c'), cols, data);
+});
+
+// ---------- Backup / restore ----------
+document.getElementById('backup-btn').addEventListener('click', ()=>{
+  const dump = {};
+  if(storageOK){
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.indexOf('dillex-')===0) dump[k] = localStorage.getItem(k);
+    }
+  }
+  const payload = { source:'dillex-case-dashboard', exported: new Date().toISOString(), edits: dump };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = 'dillex-docket-backup-'+d+'.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('restore-btn').addEventListener('click', ()=>{
+  document.getElementById('restore-file').click();
+});
+document.getElementById('restore-file').addEventListener('change', (ev)=>{
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result);
+      const edits = parsed.edits || parsed;
+      if(!storageOK){
+        alert('Local storage is blocked in this browser, so the restored edits can\'t be saved here.');
+        return;
+      }
+      let count = 0;
+      Object.keys(edits).forEach(k=>{
+        if(k.indexOf('dillex-')===0){ localStorage.setItem(k, edits[k]); count++; }
+      });
+      alert('Restored '+count+' saved edit'+(count===1?'':'s')+'. The page will now reload.');
+      location.reload();
+    }catch(e){
+      alert('That file doesn\'t look like a valid backup — could not read it as JSON.');
+    }
+  };
+  reader.readAsText(file);
+});
+
+renderAll();
+</script>
+</body>
+</html>
