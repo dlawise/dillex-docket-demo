@@ -69,6 +69,12 @@
   .origcat{font-size:10.5px;color:var(--slate);margin-top:3px;font-style:italic;}
   .month-tag{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--slate);}
   .edit-select{font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:4px 6px;border:1px solid var(--rule);border-radius:2px;background:var(--paper);color:var(--ink);max-width:100%;}
+  .edit-name{font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:500;padding:4px 6px;border:1px solid transparent;border-radius:2px;background:transparent;color:var(--ink);width:100%;min-width:120px;}
+  .edit-name:hover{border-color:var(--rule);}
+  .edit-name:focus{border-color:var(--ink);background:var(--paper);outline:none;}
+  .custom-tag{font-size:9px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.04em;color:var(--forest);background:var(--forest-bg);padding:1px 5px;border-radius:8px;margin-left:5px;}
+  .del-btn{background:none;border:none;color:var(--burgundy);cursor:pointer;font-size:13px;padding:0 4px;}
+  .del-btn:hover{font-weight:600;}
   .note-row{background:var(--grey-bg);}
   .note-row textarea{width:100%;min-height:44px;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;padding:6px 8px;border:1px solid var(--rule);border-radius:2px;resize:vertical;}
   .note-btn{font-family:'IBM Plex Mono',monospace;font-size:10.5px;background:none;border:1px solid var(--rule);padding:3px 8px;cursor:pointer;color:var(--ink-soft);border-radius:2px;}
@@ -108,7 +114,7 @@
 
   <div style="background:var(--forest);color:#fff;padding:10px 16px;border-radius:2px;margin-bottom:1.25rem;font-size:12.5px;line-height:1.5;">
     <strong style="font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.05em;font-size:11px;">Template / demo — no real client data</strong><br>
-    Every name below is a placeholder ("Client 001" etc.) — this version is safe to host publicly, including on GitHub Pages. Do not paste real client names into this file if it's going anywhere public; keep populated versions on Dillex's internal storage only.
+    Every name below is a placeholder ("Client 001" etc.) — this version is safe to host publicly, including on GitHub Pages. If you rename entries or import a CSV of real client names to use this locally, keep that populated copy off any public host — download it and keep it on Dillex's internal storage only.
   </div>
 
   <div class="masthead">
@@ -126,6 +132,9 @@
     <button class="tbtn" id="backup-btn">⬇ Backup edits (.json)</button>
     <button class="tbtn ghost" id="restore-btn">⬆ Restore edits from backup</button>
     <input type="file" id="restore-file" accept="application/json,.json" style="display:none;">
+    <button class="tbtn" id="import-btn">⬆ Import intake from CSV</button>
+    <input type="file" id="import-file" accept=".csv,text/csv" style="display:none;">
+    <button class="tbtn ghost" id="template-btn">⬇ Download CSV template</button>
   </div>
 
   <div class="stats" id="stats"></div>
@@ -141,12 +150,12 @@
   </div>
 
   <div class="panel active" id="panel-pipeline">
-    <div class="panel-intro">Every matter's category, status and legal aid position can be edited directly in the table — changing a status here is what moves a matter onto the Not proceeding, Finished or Closed pages.</div>
+    <div class="panel-intro">Every matter's name, category, status and legal aid position can be edited directly in the table — click a client name to rename it, or change a status to move a matter onto the Not proceeding, Finished or Closed pages. Use "Import intake from CSV" above to add a batch of new matters from a file on your PC — nothing is uploaded anywhere, the file is only read by your browser. Rows added this way carry a green "imported" tag and can be removed with the ✕ button.</div>
     <div class="controls">
       <input type="text" id="p-search" placeholder="Search by client name…">
       <select id="p-month">
         <option value="">All months</option>
-        <option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option>
+        <option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option><option value="AUGUST">August</option>
       </select>
       <select id="p-category"><option value="">All categories</option></select>
       <select id="p-source"><option value="">All sources</option></select>
@@ -166,7 +175,7 @@
       <input type="text" id="o-search" placeholder="Search by client name…">
       <select id="o-month">
         <option value="">All months</option>
-        <option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option>
+        <option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option><option value="AUGUST">August</option>
       </select>
       <select id="o-status"><option value="">All statuses</option></select>
       <button class="export-btn" id="o-export">⎙ Export shown rows as PDF</button>
@@ -183,7 +192,7 @@
     <div class="legend"><span><span class="sw" style="background:var(--ochre-bg);border:1px solid var(--ochre);"></span>Legal aid in place — needs closing off</span></div>
     <div class="controls">
       <select id="np-month">
-        <option value="">All months</option><option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option>
+        <option value="">All months</option><option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option><option value="AUGUST">August</option>
       </select>
       <button class="export-btn" id="np-export">⎙ Export shown rows as PDF</button>
     </div>
@@ -198,7 +207,7 @@
     <div class="panel-intro">Matters marked "finished / concluded" — work completed, outcome achieved. Distinct from "closed" so you can see recently concluded matters before archiving.</div>
     <div class="controls">
       <select id="f-month">
-        <option value="">All months</option><option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option>
+        <option value="">All months</option><option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option><option value="AUGUST">August</option>
       </select>
       <button class="export-btn" id="f-export">⎙ Export shown rows as PDF</button>
     </div>
@@ -213,7 +222,7 @@
     <div class="panel-intro">Fully closed files — administratively wrapped up, nothing outstanding.</div>
     <div class="controls">
       <select id="c-month">
-        <option value="">All months</option><option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option>
+        <option value="">All months</option><option value="PRE-MAY">Pre-May</option><option value="MAY">May</option><option value="JUNE">June</option><option value="JULY">July</option><option value="AUGUST">August</option>
       </select>
       <button class="export-btn" id="c-export">⎙ Export shown rows as PDF</button>
     </div>
@@ -316,6 +325,11 @@
         <li>GitHub Pages is a reasonable place to host a <strong>template</strong> version of this tool with placeholder names and no real client data, if the goal is to demonstrate or reuse the structure — happy to prepare that version separately if useful.</li>
         <li>Genuinely private, multi-user hosting (so several people at the firm can view and edit the same live list) is a different kind of project — a small web app with real access control and a database — rather than a static file on any free host.</li>
       </ul>
+
+      <div class="tagline">New: editable names and bulk import</div>
+      <h3>Client names can be edited in place, and new intake can be imported from a CSV</h3>
+      <p>Every name field — on the Pipeline, Ongoing and all three status pages — is now a text box; click into it and type to rename. This is what makes the template version actually usable: replace "Client 001" with a real name locally, on your own machine, and it stays there (subject to the same per-file, per-PC storage rules as everything else).</p>
+      <p><strong>Import intake from CSV</strong> reads a spreadsheet file directly from your computer — nothing is uploaded anywhere, the browser just opens and reads the file locally, the same way it reads any file you attach to an email. Use <strong>Download CSV template</strong> first to get the expected column headings (Name, Month, Source, Category, Status, Legal aid — only Name is required, everything else defaults sensibly if left blank or misspelled). Imported matters appear on the Pipeline page with a green "imported" tag and their own ✕ button if you need to remove one; they behave exactly like the built-in matters otherwise — filterable, editable, exportable to PDF.</p>
     </div>
   </div>
 
@@ -492,33 +506,72 @@ function baseCategory(str){
   return 'Unspecified';
 }
 
+function getCustomPipelineRaw(){
+  if(!storageOK) return [];
+  try{
+    const raw = localStorage.getItem('dillex-custom-pipeline');
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function saveCustomPipelineRaw(arr){
+  if(!storageOK) return;
+  try{ localStorage.setItem('dillex-custom-pipeline', JSON.stringify(arr)); }catch(e){}
+}
+
+function buildPipeline(){
+  const base = PIPELINE_RAW.map(r=>{
+    const id = 'p'+r[0];
+    return {
+      id, list:'Intake', no:r[0], name: getOverride('name',id) || r[1], month:r[2], source:r[3],
+      origCategory:r[4],
+      category: getOverride('cat',id) || baseCategory(r[4]),
+      legalAid: getOverride('laa',id) || 'Unknown',
+      status: getOverride('status',id) || r[5],
+      detail:'', custom:false
+    };
+  });
+  const custom = getCustomPipelineRaw().map(o=>{
+    const id = o.id;
+    return {
+      id, list:'Intake', no:o.no, name: getOverride('name',id) || o.name, month: o.month, source: o.source,
+      origCategory: o.category,
+      category: getOverride('cat',id) || o.category,
+      legalAid: getOverride('laa',id) || o.legalAid,
+      status: getOverride('status',id) || o.status,
+      detail:'', custom:true
+    };
+  });
+  return base.concat(custom);
+}
+
+function buildOngoing(){
+  return ONGOING_RAW.map(r=>{
+    const id = 'o'+r[0];
+    return {
+      id, list:'Ongoing', no:r[0], name: getOverride('name',id) || r[1], month:r[2], source:'',
+      origCategory:'',
+      category:'',
+      detail:r[3],
+      legalAid: getOverride('laa',id) || r[4],
+      court: getOverride('court',id) || r[5],
+      status: getOverride('status',id) || 'Active'
+    };
+  });
+}
+
 // Build unified matter objects
-const PIPELINE = PIPELINE_RAW.map(r=>{
-  const id = 'p'+r[0];
-  return {
-    id, list:'Intake', no:r[0], name:r[1], month:r[2], source:r[3],
-    origCategory:r[4],
-    category: getOverride('cat',id) || baseCategory(r[4]),
-    legalAid: getOverride('laa',id) || 'Unknown',
-    status: getOverride('status',id) || r[5],
-    detail:''
-  };
-});
+let PIPELINE = buildPipeline();
+let ONGOING = buildOngoing();
+let ALL = PIPELINE.concat(ONGOING);
 
-const ONGOING = ONGOING_RAW.map(r=>{
-  const id = 'o'+r[0];
-  return {
-    id, list:'Ongoing', no:r[0], name:r[1], month:r[2], source:'',
-    origCategory:'',
-    category:'',
-    detail:r[3],
-    legalAid: getOverride('laa',id) || r[4],
-    court: getOverride('court',id) || r[5],
-    status: getOverride('status',id) || 'Active'
-  };
-});
+function rebuildData(){
+  PIPELINE = buildPipeline();
+  ONGOING = buildOngoing();
+  ALL = PIPELINE.concat(ONGOING);
+  const sources = [...new Set(PIPELINE.map(m=>m.source))].sort();
+  fillSelect('p-source', sources, 'All sources');
+}
 
-const ALL = PIPELINE.concat(ONGOING);
 
 function optionList(options, current, onchange){
   const sel = document.createElement('select');
@@ -554,6 +607,35 @@ function hasLegalAid(m){
   return m.legalAid==='Applied' || m.legalAid==='Granted';
 }
 
+function nameInput(m){
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.className = 'edit-name';
+  inp.value = m.name;
+  inp.addEventListener('change', ()=>{
+    m.name = inp.value.trim() || m.name;
+    setOverride('name', m.id, m.name);
+    renderAll();
+  });
+  return inp;
+}
+
+function deleteBtn(m){
+  const btn = document.createElement('button');
+  btn.className = 'del-btn';
+  btn.title = 'Remove this imported matter';
+  btn.textContent = '✕';
+  btn.addEventListener('click', ()=>{
+    if(!confirm('Remove '+m.name+' from the imported list? This can\'t be undone.')) return;
+    const arr = getCustomPipelineRaw().filter(o=>o.id!==m.id);
+    saveCustomPipelineRaw(arr);
+    ['name','cat','laa','status','note'].forEach(f=>{ try{ localStorage.removeItem('dillex-'+f+'-'+m.id); }catch(e){} });
+    rebuildData();
+    renderAll();
+  });
+  return btn;
+}
+
 // populate filter dropdowns
 function fillSelect(selId, values, allLabel){
   const el = document.getElementById(selId);
@@ -574,7 +656,7 @@ function renderStats(){
   const daCount = PIPELINE.filter(m=>m.category==='Domestic abuse').length;
   const el = document.getElementById('stats');
   const cells = [
-    ['Total intake, pre-May – Jul', total, ''],
+    ['Total intake matters', total, ''],
     ['Currently active', active, ''],
     ['Not proceeding', notProc, 'flag'],
     ['Finished / concluded', finished, 'done'],
@@ -638,13 +720,16 @@ function renderPipeline(){
       ? `<div class="origcat">originally recorded: ${m.origCategory}</div>` : '';
     tr.innerHTML = `
       <td class="no">${m.no}</td>
-      <td class="name">${m.name}</td>
+      <td></td>
       <td class="month-tag">${m.month}</td>
       <td>${m.source||'—'}</td>
       <td></td>
       <td></td>
       <td></td>
-      <td><button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button></td>`;
+      <td></td>`;
+    const nameTd = tr.children[1];
+    nameTd.appendChild(nameInput(m));
+    if(m.custom) nameTd.insertAdjacentHTML('beforeend', '<span class="custom-tag">imported</span>');
     const catTd = tr.children[4];
     catTd.appendChild(optionList(CATS, m.category, v=>{ m.category=v; setOverride('cat',m.id,v); renderAll(); }));
     catTd.insertAdjacentHTML('beforeend', origNote);
@@ -652,6 +737,9 @@ function renderPipeline(){
     laaTd.appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
     const statTd = tr.children[6];
     statTd.appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
+    const actionTd = tr.children[7];
+    actionTd.innerHTML = `<button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button>`;
+    if(m.custom) actionTd.appendChild(deleteBtn(m));
     body.appendChild(tr);
     body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 8));
   });
@@ -679,13 +767,14 @@ function renderOngoing(){
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="no">${m.no}</td>
-      <td class="name">${m.name}</td>
+      <td></td>
       <td class="month-tag">${m.month}</td>
       <td>${m.detail||'—'}</td>
       <td></td>
       <td>${m.court||'<span style="color:var(--slate)">—</span>'}</td>
       <td></td>
       <td><button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button></td>`;
+    tr.children[1].appendChild(nameInput(m));
     const laaTd = tr.children[4];
     laaTd.appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
     const statTd = tr.children[6];
@@ -717,17 +806,23 @@ function renderStatusPage(panelSuffix, prefix, statusValue){
     const detail = m.list==='Intake' ? (m.category||'—') : (m.detail||'—');
     tr.innerHTML = `
       <td class="no">${m.no}</td>
-      <td class="name">${m.name}</td>
+      <td></td>
       <td class="listtag">${m.list}</td>
       <td class="month-tag">${m.month}</td>
       <td>${detail}</td>
       <td></td>
       <td></td>
-      <td><button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button></td>`;
+      <td></td>`;
+    const nameTd = tr.children[1];
+    nameTd.appendChild(nameInput(m));
+    if(m.custom) nameTd.insertAdjacentHTML('beforeend', '<span class="custom-tag">imported</span>');
     const laaTd = tr.children[5];
     laaTd.appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
     const moveTd = tr.children[6];
     moveTd.appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
+    const actionTd = tr.children[7];
+    actionTd.innerHTML = `<button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button>`;
+    if(m.custom) actionTd.appendChild(deleteBtn(m));
     body.appendChild(tr);
     body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 8));
   });
@@ -776,7 +871,7 @@ function printRows(title, subtitle, columns, rows){
 function monthLabel(prefix){
   const el = document.getElementById(prefix+'-month');
   if(!el || !el.value) return 'All months';
-  const map = {'PRE-MAY':'Pre-May','MAY':'May','JUNE':'June','JULY':'July'};
+  const map = {'PRE-MAY':'Pre-May','MAY':'May','JUNE':'June','JULY':'July','AUGUST':'August'};
   return map[el.value] || el.value;
 }
 
@@ -862,6 +957,105 @@ document.getElementById('restore-file').addEventListener('change', (ev)=>{
 });
 
 renderAll();
+
+// ---------- CSV import ----------
+function splitCSVLine(line){
+  const result = [];
+  let cur = '';
+  let inQuotes = false;
+  for(let i=0;i<line.length;i++){
+    const ch = line[i];
+    if(inQuotes){
+      if(ch === '"'){
+        if(line[i+1] === '"'){ cur+='"'; i++; } else { inQuotes = false; }
+      } else { cur += ch; }
+    } else {
+      if(ch === '"'){ inQuotes = true; }
+      else if(ch === ','){ result.push(cur); cur = ''; }
+      else { cur += ch; }
+    }
+  }
+  result.push(cur);
+  return result;
+}
+function parseCSV(text){
+  const lines = text.split(/\r\n|\n/).filter(l=>l.trim().length>0);
+  if(lines.length===0) return [];
+  const headers = splitCSVLine(lines[0]).map(h=>h.trim().toLowerCase());
+  const rows = [];
+  for(let i=1;i<lines.length;i++){
+    const cells = splitCSVLine(lines[i]);
+    const obj = {};
+    headers.forEach((h,idx)=>{ obj[h] = (cells[idx]||'').trim(); });
+    rows.push(obj);
+  }
+  return rows;
+}
+function pickField(row, aliases){
+  for(const a of aliases){ if(row[a] !== undefined && row[a] !== '') return row[a]; }
+  return '';
+}
+function matchOrDefault(value, allowed, fallback){
+  const found = allowed.find(a=>a.toLowerCase()===value.trim().toLowerCase());
+  return found || fallback;
+}
+
+document.getElementById('template-btn').addEventListener('click', ()=>{
+  const csv = 'Name,Month,Source,Category,Status,Legal aid\n'
+    + 'Jane Sample,AUGUST,NCDV,Domestic abuse,Active,Unknown\n'
+    + 'John Example,AUGUST,CourtNav,Section 8 orders,Active,Applied\n';
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'dillex-intake-import-template.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('import-btn').addEventListener('click', ()=>{
+  document.getElementById('import-file').click();
+});
+document.getElementById('import-file').addEventListener('change', (ev)=>{
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    let parsedRows;
+    try{ parsedRows = parseCSV(reader.result); }
+    catch(e){ alert('Could not read that file as CSV.'); return; }
+
+    const existing = getCustomPipelineRaw();
+    let nextNo = 100 + existing.length;
+    const added = [];
+    let skipped = 0;
+
+    parsedRows.forEach((row, idx)=>{
+      const name = pickField(row, ['name','client','client name']);
+      if(!name){ skipped++; return; }
+      const month = matchOrDefault(pickField(row,['month']), ['PRE-MAY','MAY','JUNE','JULY','AUGUST'], 'AUGUST');
+      const source = pickField(row,['source']) || 'Direct';
+      const category = matchOrDefault(pickField(row,['category','matter','matter type']), CATS, 'Unspecified');
+      const status = matchOrDefault(pickField(row,['status']), STATUSES, 'Active');
+      const legalAid = matchOrDefault(pickField(row,['legal aid','legalaid','laa']), LAAS, 'Unknown');
+      const id = 'pc'+Date.now()+'-'+idx;
+      added.push({ id, no:String(nextNo++), name, month, source, category, status, legalAid });
+    });
+
+    if(added.length===0){
+      alert('No valid rows found — make sure the CSV has a "Name" column with at least one filled-in row.');
+      return;
+    }
+    if(!storageOK){
+      alert('Local storage is blocked in this browser, so imported matters can\'t be saved here.');
+      return;
+    }
+    saveCustomPipelineRaw(existing.concat(added));
+    rebuildData();
+    renderAll();
+    alert('Imported '+added.length+' matter'+(added.length===1?'':'s')+(skipped?' ('+skipped+' row'+(skipped===1?'':'s')+' skipped — missing a name)':'')+'. They\'re now in the Intake pipeline, tagged "imported".');
+  };
+  reader.readAsText(file);
+});
 </script>
 </body>
 </html>
