@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dillex Solicitors — case docket</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182842; --ink-soft:#3c4a63; --parchment:#F5F2EA; --paper:#FFFFFF;
+    --slate:#666f7d; --rule:#DCD5C4;
+    --burgundy:#8C3B3B; --burgundy-bg:#F3E7E5;
+    --forest:#3F5D4E; --forest-bg:#E7EEE8;
+    --ochre:#96702A; --ochre-bg:#F4EBD9;
+    --grey-bg:#EEEBE2;
+    --plum:#5C4066; --plum-bg:#EEE7F0;
+    --steel:#2C4870; --steel-bg:#E4EAF2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--parchment);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
+  .wrap{max-width:1260px;margin:0 auto;padding:2.5rem 2rem 4rem;}
+  .masthead{border-bottom:2px solid var(--ink);padding-bottom:1.25rem;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;flex-wrap:wrap;}
+  .masthead .firm{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--ochre);margin-bottom:6px;}
+  .masthead h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:32px;margin:0 0 4px;letter-spacing:-0.01em;}
+  .masthead .sub{font-size:13px;color:var(--slate);text-transform:uppercase;letter-spacing:.08em;}
+  .masthead .date{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink-soft);text-align:right;}
+  .storage-note{font-size:11.5px;color:var(--ink-soft);background:var(--paper);border:1px solid var(--rule);padding:9px 12px;border-radius:2px;margin-bottom:1rem;line-height:1.5;}
+  .storage-note.blocked{border-color:var(--burgundy);color:var(--burgundy);}
+  .anon-note{font-size:11.5px;color:var(--forest);background:var(--forest-bg);border:1px solid var(--forest);padding:9px 12px;border-radius:2px;margin-bottom:1.5rem;line-height:1.5;}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;}
+  .toolbar-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .toolbar-label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-right:2px;}
+  .toolbar-divider{width:1px;align-self:stretch;background:var(--rule);margin:2px 4px;}
+  .tbtn{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.02em;padding:7px 12px;border:1px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:2px;cursor:pointer;}
+  .tbtn:hover{background:var(--ink);color:var(--paper);}
+  .tbtn.ghost{border-color:var(--rule);color:var(--ink-soft);}
+  .tbtn.ghost:hover{background:var(--grey-bg);color:var(--ink);border-color:var(--rule);}
+  .overview-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-bottom:6px;}
+  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin-bottom:1.25rem;}
+  .stats.stats-cats{grid-template-columns:repeat(6,1fr);margin-bottom:2rem;}
+  .stat{background:var(--paper);padding:12px 14px;transition:background-color .15s ease;}
+  .stat:hover{background:#FBFAF7;}
+  .stat .n{font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:500;line-height:1;}
+  .stat .l{font-size:10.5px;color:var(--slate);text-transform:uppercase;letter-spacing:.05em;margin-top:6px;}
+  .stat.flag .n{color:var(--burgundy);}
+  .stat.watch .n{color:var(--ochre);}
+  .stat.done .n{color:var(--steel);}
+  .stat.closed .n{color:var(--slate);}
+  .cat-stat.cat-da .n{color:var(--burgundy);}
+  .cat-stat.cat-s8 .n{color:var(--ochre);}
+  .cat-stat.cat-care .n{color:var(--forest);}
+  .cat-stat.cat-tot .n{color:var(--plum);}
+  .cat-stat.cat-fin .n{color:var(--steel);}
+  .tabs{display:flex;gap:2px;border-bottom:1px solid var(--rule);margin-bottom:1.25rem;flex-wrap:wrap;}
+  .tab{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.02em;text-transform:uppercase;padding:9px 13px;cursor:pointer;color:var(--slate);border-bottom:2px solid transparent;user-select:none;}
+  .tab.active{color:var(--ink);border-bottom-color:var(--ink);}
+  .tab:hover{color:var(--ink);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .panel-intro{font-size:13px;color:var(--slate);margin:-4px 0 14px;line-height:1.5;}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;align-items:center;}
+  .controls input[type=text]{flex:1;min-width:160px;padding:8px 12px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:2px;}
+  .controls select{padding:8px 10px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:2px;}
+  .export-btn{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:6px 11px;border:1px solid var(--rule);background:var(--paper);color:var(--ink-soft);border-radius:2px;cursor:pointer;margin-left:auto;}
+  .export-btn:hover{border-color:var(--ink);color:var(--ink);}
+  .count{font-size:12px;color:var(--slate);font-family:'IBM Plex Mono',monospace;margin-bottom:.6rem;}
+  .section-header{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink);background:var(--grey-bg);padding:6px 10px;margin-top:14px;border-left:3px solid var(--ochre);}
+  .section-header:first-child{margin-top:0;}
+  table{width:100%;border-collapse:collapse;background:var(--paper);box-shadow:0 1px 3px rgba(24,40,66,0.06);}
+  thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);font-weight:500;padding:8px 9px;border-bottom:1px solid var(--ink);white-space:nowrap;}
+  tbody td{padding:7px 9px;font-size:12.8px;border-bottom:1px solid var(--rule);vertical-align:top;}
+  tbody tr:hover{background:var(--grey-bg);}
+  tbody tr.laa-flag{background:var(--ochre-bg);}
+  tbody tr.laa-flag:hover{background:#efe0bd;}
+  .no{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-size:12.5px;font-weight:500;}
+  .custom-tag{font-size:9px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.04em;color:var(--forest);background:var(--forest-bg);padding:1px 5px;border-radius:8px;margin-left:5px;}
+  .del-btn{background:none;border:none;color:var(--burgundy);cursor:pointer;font-size:13px;padding:0 4px;}
+  .del-btn:hover{font-weight:600;}
+  .pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-family:'IBM Plex Mono',monospace;letter-spacing:.02em;white-space:nowrap;margin:1px 3px 1px 0;}
+  .pill-active{background:var(--forest-bg);color:var(--forest);}
+  .pill-notproc{background:var(--burgundy-bg);color:var(--burgundy);}
+  .pill-watch{background:var(--ochre-bg);color:var(--ochre);}
+  .pill-neutral{background:var(--grey-bg);color:var(--ink-soft);}
+  .pill-done{background:var(--steel-bg);color:var(--steel);}
+  .month-tag{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--slate);}
+  .edit-select{font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:4px 6px;border:1px solid var(--rule);border-radius:2px;background:var(--paper);color:var(--ink);max-width:100%;}
+  .edit-text{font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;padding:5px 7px;border:1px solid var(--rule);border-radius:2px;background:var(--paper);color:var(--ink);width:100%;min-width:140px;}
+  .cat-wrap{display:flex;flex-wrap:wrap;gap:3px;max-width:280px;}
+  .cat-pill{font-size:10px;font-family:'IBM Plex Mono',monospace;padding:2px 7px;border-radius:20px;border:1px solid var(--rule);background:var(--paper);color:var(--slate);cursor:pointer;white-space:nowrap;}
+  .cat-pill.on{border-color:transparent;}
+  .cat-pill.cat-da{}
+  .cat-pill.on.cat-da{background:var(--burgundy-bg);color:var(--burgundy);}
+  .cat-pill.on.cat-s8{background:var(--ochre-bg);color:var(--ochre);}
+  .cat-pill.on.cat-fin{background:var(--steel-bg);color:var(--steel);}
+  .cat-pill.on.cat-tot{background:var(--plum-bg);color:var(--plum);}
+  .cat-pill.on.cat-care{background:var(--forest-bg);color:var(--forest);}
+  .cat-pill-ro{font-size:10px;font-family:'IBM Plex Mono',monospace;padding:2px 7px;border-radius:20px;white-space:nowrap;display:inline-block;margin:1px 3px 1px 0;}
+  .flag-note{font-size:10.5px;color:var(--burgundy);font-style:italic;margin-top:3px;}
+  .note-row{background:var(--grey-bg);}
+  .note-row textarea{width:100%;min-height:44px;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;padding:6px 8px;border:1px solid var(--rule);border-radius:2px;resize:vertical;}
+  .note-btn{font-family:'IBM Plex Mono',monospace;font-size:10.5px;background:none;border:1px solid var(--rule);padding:3px 8px;cursor:pointer;color:var(--ink-soft);border-radius:2px;}
+  .note-btn:hover{border-color:var(--ink);color:var(--ink);}
+  .expand-btn{background:none;border:none;cursor:pointer;color:var(--slate);font-size:11px;font-family:'IBM Plex Mono',monospace;padding:0;white-space:nowrap;}
+  .expand-btn:hover{color:var(--ink);}
+  .rec h3{font-family:'Source Serif 4',serif;font-size:18px;font-weight:600;margin:1.6rem 0 .5rem;}
+  .rec h3:first-child{margin-top:0;}
+  .rec p{font-size:14px;line-height:1.6;color:var(--ink-soft);margin:.3rem 0 .8rem;}
+  .rec ul{margin:.3rem 0 1rem;padding-left:1.2rem;}
+  .rec li{font-size:14px;line-height:1.6;color:var(--ink-soft);margin-bottom:.35rem;}
+  .rec .tagline{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ochre);font-family:'IBM Plex Mono',monospace;margin-bottom:2px;}
+  .divider{border:0;border-top:1px solid var(--rule);margin:1.75rem 0;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--slate);margin-bottom:10px;align-items:center;}
+  .legend .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle;}
+  footer{margin-top:2.5rem;padding-top:1rem;border-top:1px solid var(--rule);font-size:11px;color:var(--slate);font-family:'IBM Plex Mono',monospace;}
+  #print-area{display:none;}
+  @media print{
+    body > *:not(#print-area){ display:none !important; }
+    #print-area{ display:block !important; }
+    @page{ margin:16mm; }
+  }
+  @media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr);}}
+
+  /* ---------- Interface polish ---------- */
+  .panel.active{animation:panelFade .16s ease-out;}
+  @keyframes panelFade{from{opacity:0;transform:translateY(2px);}to{opacity:1;transform:translateY(0);}}
+  .tab{transition:color .12s ease;}
+  .tbtn, .export-btn, .expand-btn, .note-btn, .cat-pill{transition:background-color .12s ease, color .12s ease, border-color .12s ease;}
+  tbody tr{transition:background-color .1s ease;}
+  select.edit-select, input.edit-text, input#am-search{transition:border-color .12s ease;}
+  select.edit-select:focus, input.edit-text:focus, input#am-search:focus, .modal-input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(24,40,66,0.08);}
+
+  .empty-state{text-align:center;padding:38px 20px;color:var(--slate);font-size:13px;border:1px dashed var(--rule);border-radius:4px;background:var(--paper);line-height:1.6;}
+  .empty-state .icon{font-size:20px;margin-bottom:6px;opacity:.55;}
+  .empty-state .sub{font-size:11.5px;color:var(--slate);opacity:.8;margin-top:2px;}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(24,40,66,0.45);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+  .modal-overlay.show{display:flex;}
+  .modal-box{background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:22px 24px;max-width:420px;width:100%;box-shadow:0 16px 40px rgba(24,40,66,0.22);animation:modalIn .15s ease-out;}
+  @keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+  .modal-title{font-family:'Source Serif 4',serif;font-size:17px;font-weight:600;margin:0 0 8px;color:var(--ink);}
+  .modal-message{font-size:13.5px;color:var(--ink-soft);line-height:1.55;margin-bottom:14px;}
+  .modal-input{width:100%;padding:9px 11px;border:1px solid var(--rule);border-radius:2px;font-family:'IBM Plex Sans',sans-serif;font-size:13.5px;margin-bottom:16px;color:var(--ink);background:var(--paper);}
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+  .modal-actions .tbtn{padding:8px 16px;}
+
+  .toast-container{position:fixed;bottom:22px;right:22px;display:flex;flex-direction:column;gap:8px;z-index:1100;max-width:340px;}
+  .toast{background:var(--ink);color:var(--paper);font-size:12.5px;line-height:1.5;padding:11px 14px;border-radius:3px;box-shadow:0 8px 22px rgba(24,40,66,0.28);font-family:'IBM Plex Sans',sans-serif;animation:toastIn .18s ease-out;}
+  .toast.warn{background:var(--burgundy);}
+  .toast.success{background:var(--forest);}
+  .toast.fade-out{animation:toastOut .18s ease-in forwards;}
+  @keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes toastOut{from{opacity:1;}to{opacity:0;transform:translateY(4px);}}
+
+  .field-error{font-size:11.5px;color:var(--burgundy);margin-top:4px;display:none;}
+  .field-error.show{display:block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div>
+      <div class="firm">Dillex Solicitors — family law</div>
+      <h1>Case management docket</h1>
+      <div class="sub">Working copy, read from Clio Manage export</div>
+    </div>
+    <div class="date">Prepared 30 Jul 2026<br>Covers pre-May – Jul intake</div>
+  </div>
+
+  <div class="anon-note">De-identified — no client names anywhere in this file, including in the notes below. Every matter is referenced only by case number. Cross-reference against Clio using the case number if you need to identify who a matter belongs to.</div>
+
+  <div class="storage-note" id="storage-warning"></div>
+
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <span class="toolbar-label">Period</span>
+      <button class="tbtn" id="add-month-btn">+ Add new month</button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <span class="toolbar-label">Your edits</span>
+      <button class="tbtn" id="backup-btn">⬇ Backup edits</button>
+      <button class="tbtn ghost" id="restore-btn">⬆ Restore edits</button>
+      <input type="file" id="restore-file" accept="application/json,.json" style="display:none;">
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <span class="toolbar-label">Bulk import</span>
+      <button class="tbtn" id="import-btn">⬆ Import from CSV</button>
+      <input type="file" id="import-file" accept=".csv,text/csv" style="display:none;">
+      <button class="tbtn ghost" id="template-btn">⬇ CSV template</button>
+    </div>
+  </div>
+
+  <div class="overview-label">Overview by status</div>
+  <div class="stats" id="stats"></div>
+  <div class="overview-label">Overview by category</div>
+  <div class="stats stats-cats" id="stats-categories"></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="all">All matters</div>
+    <div class="tab" data-tab="ongoing">Ongoing matters</div>
+    <div class="tab" data-tab="finished">Finished / concluded</div>
+    <div class="tab" data-tab="closed">Closed files</div>
+    <div class="tab" data-tab="deploy">Using &amp; backing up this file</div>
+  </div>
+
+  <div class="panel active" id="panel-all">
+    <div class="panel-intro">Every matter, referenced by case number only. Domestic abuse and section 8 orders sit under private law; care proceedings sits under public law; transfer of tenancy, financials and divorce are matrimonial/financial matters that often run alongside each other. Group by whichever lens is useful — a matter with more than one category appears in every relevant section. Click a category pill to add or remove it from a matter.</div>
+    <div class="controls">
+      <button class="tbtn" id="add-matter-toggle">+ Add matter</button>
+      <button class="export-btn" id="am-export">⎙ Export shown rows as PDF</button>
+    </div>
+
+    <div id="add-matter-form" style="display:none;background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:16px 18px;margin-bottom:1.25rem;box-shadow:0 2px 8px rgba(24,40,66,0.08);">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);margin-bottom:10px;">New matter — month first, then whatever else you have to hand</div>
+      <div class="controls" style="margin-bottom:2px;">
+        <select id="nm-month"></select>
+        <input type="text" id="nm-clientref" placeholder="Client name (optional)">
+        <select id="nm-source"></select>
+        <select id="nm-status"></select>
+        <select id="nm-laa"></select>
+      </div>
+      <div class="field-error" id="nm-month-error">Month is required — that's the first thing to set for a new matter.</div>
+      <div style="margin:10px 0 8px;">
+        <div style="font-size:11px;color:var(--slate);margin-bottom:4px;">Category (click any that apply)</div>
+        <div class="cat-wrap" id="nm-categories"></div>
+      </div>
+      <input type="text" id="nm-detail" placeholder="Next action / details (optional)" class="edit-text" style="margin-bottom:10px;">
+      <div>
+        <button class="tbtn" id="nm-submit">Add matter</button>
+        <button class="tbtn ghost" id="nm-cancel">Cancel</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <input type="text" id="am-search" placeholder="Search case number or client name…">
+      <select id="am-groupby">
+        <option value="month">Group by: month</option>
+        <option value="source">Group by: source</option>
+        <option value="category">Group by: category</option>
+        <option value="lawarea">Group by: law area</option>
+        <option value="none">No grouping</option>
+      </select>
+      <select id="am-month"><option value="">All months</option></select>
+      <select id="am-source"><option value="">All sources</option></select>
+      <select id="am-category"><option value="">All categories</option></select>
+      <select id="am-lawarea"><option value="">All law areas</option></select>
+      <select id="am-status"><option value="">All statuses</option></select>
+    </div>
+    <div class="count" id="am-count"></div>
+    <div id="am-groups"></div>
+  </div>
+
+  <div class="panel" id="panel-ongoing">
+    <div class="panel-intro">Live matters currently being worked (status: active). Update legal aid position and next action as things move; change the status to shift a matter onto Finished/concluded or Closed.</div>
+    <div class="controls">
+      <select id="o-month"><option value="">All months</option></select>
+      <button class="export-btn" id="o-export">⎙ Export shown rows as PDF</button>
+    </div>
+    <div class="count" id="o-count"></div>
+    <table>
+      <thead><tr><th>No.</th><th>Client name</th><th>Month</th><th>Legal aid</th><th>Status</th><th>Next action / details</th><th></th></tr></thead>
+      <tbody id="o-body"></tbody>
+    </table>
+  </div>
+
+  <div class="panel" id="panel-finished">
+    <div class="panel-intro">Matters that have run their course — concluded with an outcome reached, or not proceeded with. Shown together because both represent work that's wrapped up on the legal side, even if not yet administratively closed.</div>
+    <div class="controls">
+      <select id="f-month"><option value="">All months</option></select>
+      <button class="export-btn" id="f-export">⎙ Export shown rows as PDF</button>
+    </div>
+    <div class="count" id="f-count"></div>
+    <table>
+      <thead><tr><th>No.</th><th>Client name</th><th>Month</th><th>Category</th><th>Status</th><th>Legal aid</th><th>Move to</th><th></th></tr></thead>
+      <tbody id="f-body"></tbody>
+    </table>
+  </div>
+
+  <div class="panel" id="panel-closed">
+    <div class="panel-intro">Fully closed files, with an outcome recorded. Also includes matters that didn't proceed but had legal aid applied for or granted, since those need a funding-closure outcome logged even though the case itself never went ahead.</div>
+    <div class="legend"><span><span class="sw" style="background:var(--ochre-bg);border:1px solid var(--ochre);"></span>Not proceeded, but legal aid was in place — needs a funding-closure outcome</span></div>
+    <div class="controls">
+      <select id="c-month"><option value="">All months</option></select>
+      <button class="export-btn" id="c-export">⎙ Export shown rows as PDF</button>
+    </div>
+    <div class="count" id="c-count"></div>
+    <table>
+      <thead><tr><th>No.</th><th>Client name</th><th>Month</th><th>Category</th><th>Status</th><th>Legal aid</th><th>Outcome</th><th></th></tr></thead>
+      <tbody id="c-body"></tbody>
+    </table>
+  </div>
+
+  <div class="panel" id="panel-deploy">
+    <div class="rec">
+      <div class="tagline">What this file is</div>
+      <h3>A self-contained page, not a connected app</h3>
+      <p>This is a single HTML file with the docket data written into it. It doesn't need installing, doesn't need an internet connection, and doesn't talk to Clio or anyone else's computer. Opening it means double-clicking the file.</p>
+
+      <div class="tagline">This copy</div>
+      <h3>Ten sample matters, for trying the tool out</h3>
+      <p>The data in this version is 10 illustrative matters, not a live export — enough to try every feature (grouping, category pills, the four status pages, legal aid flags, PDF export, CSV import) without wading through a full caseload. When you're ready to load the real docket, use <strong>Import matters from CSV</strong>, or ask for a version rebuilt from a fresh Clio export.</p>
+
+      <div class="tagline">Client names</div>
+      <h3>The sample data has none — the "Client name" field is optional and entirely up to you</h3>
+      <p>Out of the box, this file has no real client names anywhere — every sample matter's client name field is blank. If you fill names in locally, they're saved the same way every other edit is: to this browser, tied to this exact file, never sent anywhere. That also means the moment you'd consider sharing, backing up to a wider location, or hosting this file anywhere more visible than Dillex's own secure storage, treat it as containing real client data and handle it accordingly.</p>
+
+      <div class="tagline">Storing and backing it up</div>
+      <h3>Treat it exactly like a Word or Excel file</h3>
+      <ul>
+        <li>Save it wherever Dillex's normal backup already covers — network drive, firm OneDrive/SharePoint, or the same location other case documents live.</li>
+        <li>To share with a colleague, send the single .html file — nothing else is needed.</li>
+        <li>To refresh it with up-to-date figures later, ask again with the latest export — it can be regenerated, not synced.</li>
+      </ul>
+
+      <div class="tagline">Editing, importing and exporting</div>
+      <h3>Edits, imports and notes all save to this PC and this file location only</h3>
+      <p>Every dropdown, category pill, text field and note box saves to the browser's local storage, tied to this exact file in this exact folder on this exact computer. Edits won't appear if the file is copied elsewhere or opened by a colleague from their own copy — each copy keeps its own separate edits. Use <strong>Backup edits</strong> to save your changes as a separate JSON file, and <strong>Restore edits</strong> to reapply them to a fresh copy of this dashboard later.</p>
+      <p><strong>+ Add matter</strong> on the All matters page opens a single-entry form — month comes first since that's the one thing every matter needs, client name and everything else is optional or defaults sensibly.</p>
+      <p><strong>Import from CSV</strong> reads a spreadsheet straight from your computer — nothing is uploaded anywhere. Use <strong>CSV template</strong> first for the expected columns. Imported matters carry a green "imported" tag and can be removed with the ✕ button.</p>
+      <p><strong>+ Add new month</strong> extends the docket beyond the built-in Pre-May–July run. When you add one, any matter still sitting in the previous month that isn't finished/concluded or closed automatically moves forward into the new month, so nothing open quietly falls out of view. It suggests the next calendar month automatically, but you can type any label you want.</p>
+      <p>Each of the four matter pages can export its currently filtered rows to PDF via the browser's own print dialog (choose "Save as PDF") — this works offline, without any external service.</p>
+
+      <div class="tagline">Given the subject matter</div>
+      <h3>Handle the file the way you'd handle any case list</h3>
+      <ul>
+        <li>Keep it inside Dillex's normal secure storage rather than personal cloud accounts or personal email.</li>
+        <li>Delete or archive old snapshots properly rather than letting stray copies build up.</li>
+        <li>If several people at the firm need to view and jointly edit the same live list, a static file like this isn't the right long-term tool — that needs an actual shared, permissioned system.</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>Dillex Solicitors · Clio Manage docket working copy · not a substitute for the source system of record</footer>
+</div>
+
+<div id="print-area"></div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-message" id="modal-message"></div>
+    <input type="text" class="modal-input" id="modal-input" style="display:none;">
+    <div class="modal-actions">
+      <button class="tbtn ghost" id="modal-cancel">Cancel</button>
+      <button class="tbtn" id="modal-confirm">OK</button>
+    </div>
+  </div>
+</div>
+<div class="toast-container" id="toast-container"></div>
+
+
+<script>
+const MONTHS = ['PRE-MAY','MAY','JUNE','JULY','AUGUST'];
+const MONTH_LABEL = {'PRE-MAY':'Pre-May','MAY':'May','JUNE':'June','JULY':'July','AUGUST':'August'};
+const SOURCES = ['NCDV','DAA','Referral','CourtNav','Unspecified'];
+const CATEGORIES = ['Domestic abuse','Section 8 orders','Care proceedings','Transfer of tenancy','Financials','Divorce'];
+const CATEGORY_LAW_AREA = {
+  'Domestic abuse':'Private law',
+  'Section 8 orders':'Private law',
+  'Care proceedings':'Public law',
+  'Transfer of tenancy':'Matrimonial & financial',
+  'Financials':'Matrimonial & financial',
+  'Divorce':'Matrimonial & financial'
+};
+const LAW_AREAS = ['Private law','Public law','Matrimonial & financial'];
+const STATUSES = ['Active','Not proceeding','Finished / concluded','Closed'];
+const LAAS = ['Unknown','Not applied','Applied','Granted','Refused','N/A - private client'];
+
+const CAT_CLASS = {
+  'Domestic abuse':'cat-da',
+  'Section 8 orders':'cat-s8',
+  'Care proceedings':'cat-care',
+  'Transfer of tenancy':'cat-tot',
+  'Financials':'cat-fin',
+  'Divorce':'cat-tot'
+};
+
+// [no, month, source, categories(;-separated), status, legalAid, detail]
+// Sample data only — 10 illustrative matters to try the tool with.
+const MATTERS_RAW = [
+["001","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
+["002","PRE-MAY","DAA","Domestic abuse;Section 8 orders","Active","Applied","Barrister booked for final hearing"],
+["003","PRE-MAY","CourtNav","Section 8 orders","Active","Unknown",""],
+["004","MAY","Referral","Care proceedings","Active","Unknown","Care matter — next review 12 Aug"],
+["005","MAY","NCDV","Domestic abuse","Not proceeding","Granted",""],
+["006","JUNE","DAA","Transfer of tenancy;Financials","Active","Unknown","TOT hearing listed 15 Jun"],
+["007","JUNE","CourtNav","Domestic abuse","Finished / concluded","Applied",""],
+["008","JULY","NCDV","Financials","Closed","Granted",""],
+["009","JULY","Referral","Domestic abuse","Active","Unknown","Awaiting client response — chase due"],
+["010","JULY","DAA","Section 8 orders","Active","Applied","Next hearing 12 Aug"],
+];
+
+let storageOK = true;
+try{ localStorage.setItem('__t__','1'); localStorage.removeItem('__t__'); }catch(e){ storageOK = false; }
+const warn = document.getElementById('storage-warning');
+if(storageOK){
+  warn.textContent = 'Every edit, category change, import and note below saves to this browser, tied to this file. See "Using & backing up this file" for what that means if the file is copied or shared.';
+}else{
+  warn.classList.add('blocked');
+  warn.textContent = 'This browser is blocking local storage for this file, so edits and notes below won\u2019t be saved between visits. Everything else works normally.';
+}
+
+function getOverride(field, id){
+  if(!storageOK) return null;
+  try{ return localStorage.getItem('dillex-'+field+'-'+id); }catch(e){ return null; }
+}
+function setOverride(field, id, val){
+  if(!storageOK) return;
+  try{ localStorage.setItem('dillex-'+field+'-'+id, val); }catch(e){}
+}
+
+// ---------- Toast + modal system (replaces alert/confirm/prompt) ----------
+function showToast(message, type){
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast' + (type ? ' '+type : '');
+  t.textContent = message;
+  container.appendChild(t);
+  setTimeout(()=>{
+    t.classList.add('fade-out');
+    setTimeout(()=>t.remove(), 200);
+  }, 4200);
+}
+
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+function showInfoModal(title, message){
+  const ov = document.getElementById('modal-overlay');
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-message').textContent = message;
+  document.getElementById('modal-input').style.display = 'none';
+  const cancelBtn = document.getElementById('modal-cancel');
+  const confirmBtn = document.getElementById('modal-confirm');
+  cancelBtn.style.display = 'none';
+  confirmBtn.textContent = 'OK';
+  confirmBtn.onclick = closeModal;
+  ov.classList.add('show');
+}
+function showConfirmModal(title, message, onConfirm, confirmLabel){
+  const ov = document.getElementById('modal-overlay');
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-message').textContent = message;
+  document.getElementById('modal-input').style.display = 'none';
+  const cancelBtn = document.getElementById('modal-cancel');
+  const confirmBtn = document.getElementById('modal-confirm');
+  cancelBtn.style.display = 'inline-block';
+  cancelBtn.onclick = closeModal;
+  confirmBtn.textContent = confirmLabel || 'Confirm';
+  confirmBtn.onclick = ()=>{ closeModal(); onConfirm(); };
+  ov.classList.add('show');
+}
+function showPromptModal(title, message, defaultValue, onConfirm){
+  const ov = document.getElementById('modal-overlay');
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-message').textContent = message;
+  const input = document.getElementById('modal-input');
+  input.style.display = 'block';
+  input.value = defaultValue || '';
+  const cancelBtn = document.getElementById('modal-cancel');
+  const confirmBtn = document.getElementById('modal-confirm');
+  cancelBtn.style.display = 'inline-block';
+  cancelBtn.onclick = closeModal;
+  confirmBtn.textContent = 'Confirm';
+  const submit = ()=>{ closeModal(); onConfirm(input.value); };
+  confirmBtn.onclick = submit;
+  input.onkeydown = (e)=>{ if(e.key==='Enter') submit(); };
+  ov.classList.add('show');
+  setTimeout(()=>{ input.focus(); input.select(); }, 50);
+}
+document.getElementById('modal-overlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'modal-overlay') closeModal();
+});
+
+// ---------- Dynamic months ----------
+const CALENDAR_MONTHS = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+function titleCase(s){ return s.charAt(0) + s.slice(1).toLowerCase(); }
+function loadExtraMonths(){
+  if(!storageOK) return;
+  try{
+    const raw = localStorage.getItem('dillex-extra-months');
+    const extra = raw ? JSON.parse(raw) : [];
+    extra.forEach(code=>{
+      if(MONTHS.indexOf(code)===-1){ MONTHS.push(code); MONTH_LABEL[code] = titleCase(code); }
+    });
+  }catch(e){}
+}
+function saveExtraMonths(){
+  if(!storageOK) return;
+  const base = ['PRE-MAY','MAY','JUNE','JULY','AUGUST'];
+  const extra = MONTHS.filter(m=>base.indexOf(m)===-1);
+  try{ localStorage.setItem('dillex-extra-months', JSON.stringify(extra)); }catch(e){}
+}
+function suggestNextMonth(){
+  const lastReal = [...MONTHS].reverse().find(m=>CALENDAR_MONTHS.indexOf(m)>-1);
+  if(!lastReal) return 'SEPTEMBER';
+  const idx = CALENDAR_MONTHS.indexOf(lastReal);
+  return CALENDAR_MONTHS[(idx+1) % 12];
+}
+loadExtraMonths();
+
+function getCustomRaw(){
+  if(!storageOK) return [];
+  try{
+    const raw = localStorage.getItem('dillex-custom-matters');
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function saveCustomRaw(arr){
+  if(!storageOK) return;
+  try{ localStorage.setItem('dillex-custom-matters', JSON.stringify(arr)); }catch(e){}
+}
+
+function buildMatters(){
+  const base = MATTERS_RAW.map(r=>{
+    const id = 'm'+r[0];
+    const catOverride = getOverride('cats', id);
+    const cats = catOverride ? JSON.parse(catOverride) : (r[3] ? r[3].split(';') : []);
+    return {
+      id, no:r[0], month: getOverride('month',id) || r[1],
+      clientRef: getOverride('clientref',id) || '',
+      source: getOverride('source',id) || r[2],
+      categories: cats,
+      status: getOverride('status',id) || r[4],
+      legalAid: getOverride('laa',id) || r[5],
+      detail: getOverride('detail',id) !== null ? getOverride('detail',id) : r[6],
+      outcome: getOverride('outcome',id) || '',
+      custom:false
+    };
+  });
+  const custom = getCustomRaw().map(o=>{
+    const id = o.id;
+    const catOverride = getOverride('cats', id);
+    const cats = catOverride ? JSON.parse(catOverride) : (o.categories||[]);
+    return {
+      id, no:o.no, month: getOverride('month',id) || o.month,
+      clientRef: getOverride('clientref',id) || o.clientRef || '',
+      source: getOverride('source',id) || o.source,
+      categories: cats,
+      status: getOverride('status',id) || o.status,
+      legalAid: getOverride('laa',id) || o.legalAid,
+      detail: getOverride('detail',id) !== null ? getOverride('detail',id) : (o.detail||''),
+      outcome: getOverride('outcome',id) || '',
+      custom:true
+    };
+  });
+  return base.concat(custom);
+}
+
+let MATTERS = buildMatters();
+
+function rebuildData(){
+  MATTERS = buildMatters();
+}
+
+function fillSelect(selId, values, allLabel, labelMap){
+  const el = document.getElementById(selId);
+  const prevValue = el.value;
+  el.innerHTML = `<option value="">${allLabel}</option>` + values.map(v=>`<option value="${v}">${labelMap?(labelMap[v]||v):v}</option>`).join('');
+  if(values.indexOf(prevValue)>-1) el.value = prevValue;
+}
+function refreshMonthSelects(){
+  fillSelect('am-month', MONTHS, 'All months', MONTH_LABEL);
+  fillSelect('o-month', MONTHS, 'All months', MONTH_LABEL);
+  fillSelect('f-month', MONTHS, 'All months', MONTH_LABEL);
+  fillSelect('c-month', MONTHS, 'All months', MONTH_LABEL);
+  const monthSel = document.getElementById('nm-month');
+  const prev = monthSel.value;
+  monthSel.innerHTML = '<option value="">Select month…</option>' + MONTHS.map(m=>`<option value="${m}">${MONTH_LABEL[m]}</option>`).join('');
+  if(MONTHS.indexOf(prev)>-1) monthSel.value = prev;
+}
+refreshMonthSelects();
+fillSelect('am-source', SOURCES, 'All sources');
+fillSelect('am-category', CATEGORIES, 'All categories');
+fillSelect('am-lawarea', LAW_AREAS, 'All law areas');
+fillSelect('am-status', STATUSES, 'All statuses');
+
+// Add-matter form selects (required fields, no blank option except month placeholder)
+(function(){
+  const sourceSel = document.getElementById('nm-source');
+  sourceSel.innerHTML = SOURCES.map(s=>`<option value="${s}">${s}</option>`).join('');
+  const statusSel = document.getElementById('nm-status');
+  statusSel.innerHTML = STATUSES.map(s=>`<option value="${s}">${s}</option>`).join('');
+  const laaSel = document.getElementById('nm-laa');
+  laaSel.innerHTML = LAAS.map(s=>`<option value="${s}">${s}</option>`).join('');
+})();
+
+function hasLegalAid(m){
+  return m.legalAid==='Applied' || m.legalAid==='Granted';
+}
+
+function pillClassStatus(status){
+  if(status==='Not proceeding') return 'pill-notproc';
+  if(status==='Finished / concluded') return 'pill-done';
+  if(status==='Closed') return 'pill-neutral';
+  return 'pill-active';
+}
+
+function optionList(options, current, onchange, labelMap){
+  const sel = document.createElement('select');
+  sel.className = 'edit-select';
+  options.forEach(o=>{
+    const opt = document.createElement('option');
+    opt.value = o; opt.textContent = labelMap ? (labelMap[o]||o) : o;
+    if(o===current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', ()=>onchange(sel.value));
+  return sel;
+}
+
+function categoryEditor(m){
+  const wrap = document.createElement('div');
+  wrap.className = 'cat-wrap';
+  CATEGORIES.forEach(cat=>{
+    const btn = document.createElement('button');
+    const on = m.categories.indexOf(cat) > -1;
+    btn.className = 'cat-pill ' + (CAT_CLASS[cat]||'') + (on ? ' on' : '');
+    btn.textContent = cat;
+    btn.title = on ? 'Click to remove' : 'Click to add';
+    btn.addEventListener('click', ()=>{
+      const idx = m.categories.indexOf(cat);
+      if(idx>-1) m.categories.splice(idx,1); else m.categories.push(cat);
+      setOverride('cats', m.id, JSON.stringify(m.categories));
+      renderAll();
+    });
+    wrap.appendChild(btn);
+  });
+  return wrap;
+}
+
+function categoryReadonly(cats){
+  if(!cats.length) return '<span style="color:var(--slate)">—</span>';
+  return cats.map(c=>`<span class="cat-pill-ro" style="background:var(--grey-bg);color:var(--ink-soft);">${c}</span>`).join('');
+}
+
+function detailInput(m){
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.className = 'edit-text';
+  inp.value = m.detail;
+  inp.placeholder = 'Next action / details…';
+  inp.addEventListener('change', ()=>{
+    m.detail = inp.value;
+    setOverride('detail', m.id, m.detail);
+  });
+  return inp;
+}
+
+function clientRefInput(m){
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.className = 'edit-text';
+  inp.value = m.clientRef;
+  inp.placeholder = 'optional';
+  inp.style.minWidth = '90px';
+  inp.addEventListener('change', ()=>{
+    m.clientRef = inp.value;
+    setOverride('clientref', m.id, m.clientRef);
+  });
+  return inp;
+}
+
+function outcomeInput(m){
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.className = 'edit-text';
+  inp.value = m.outcome;
+  inp.placeholder = 'Record outcome…';
+  inp.addEventListener('change', ()=>{
+    m.outcome = inp.value;
+    setOverride('outcome', m.id, m.outcome);
+  });
+  return inp;
+}
+
+function deleteBtn(m){
+  const btn = document.createElement('button');
+  btn.className = 'del-btn';
+  btn.title = 'Remove this imported matter';
+  btn.textContent = '✕';
+  btn.addEventListener('click', ()=>{
+    showConfirmModal(
+      'Remove matter',
+      'Remove case '+m.no+' from the imported list? This can\'t be undone.',
+      ()=>{
+        const arr = getCustomRaw().filter(o=>o.id!==m.id);
+        saveCustomRaw(arr);
+        ['source','cats','status','laa','detail','outcome','note','clientref','month'].forEach(f=>{ try{ localStorage.removeItem('dillex-'+f+'-'+m.id); }catch(e){} });
+        rebuildData();
+        renderAll();
+        showToast('Case '+m.no+' removed.', 'success');
+      },
+      'Remove'
+    );
+  });
+  return btn;
+}
+
+function noteRowHtml(id, colspan){
+  const val = getOverride('note', id) || '';
+  return `<tr class="note-row" id="note-${id}" style="display:none;"><td colspan="${colspan}">
+    <textarea id="ta-${id}" placeholder="Add a working note for this matter...">${val}</textarea>
+    <div style="margin-top:6px;"><button class="note-btn" onclick="saveNote('${id}')">Save note</button></div>
+  </td></tr>`;
+}
+window.saveNote = function(id){
+  const val = document.getElementById('ta-'+id).value;
+  setOverride('note', id, val);
+  const btn = document.querySelector(`#note-${id} .note-btn`);
+  if(btn){ const old = btn.textContent; btn.textContent = storageOK ? 'Saved' : 'Not saved'; setTimeout(()=>btn.textContent=old, 1300); }
+};
+window.toggleNote = function(id){
+  const row = document.getElementById('note-'+id);
+  if(row) row.style.display = row.style.display==='none' ? 'table-row' : 'none';
+};
+
+function renderStats(){
+  const total = MATTERS.length;
+  const active = MATTERS.filter(m=>m.status==='Active').length;
+  const notProc = MATTERS.filter(m=>m.status==='Not proceeding').length;
+  const finished = MATTERS.filter(m=>m.status==='Finished / concluded').length;
+  const closedCount = MATTERS.filter(m=>m.status==='Closed' || (m.status==='Not proceeding' && hasLegalAid(m))).length;
+  const el = document.getElementById('stats');
+  const cells = [
+    ['Total matters', total, ''],
+    ['Ongoing (active)', active, ''],
+    ['Not proceeding', notProc, 'flag'],
+    ['Finished / concluded', finished, 'done'],
+    ['Closed (incl. LAA not-proceeding)', closedCount, 'closed']
+  ];
+  el.innerHTML = cells.map(c=>`<div class="stat ${c[2]}"><div class="n">${c[1]}</div><div class="l">${c[0]}</div></div>`).join('');
+
+  const catEl = document.getElementById('stats-categories');
+  catEl.innerHTML = CATEGORIES.map(cat=>{
+    const count = MATTERS.filter(m=>m.categories.indexOf(cat)>-1).length;
+    return `<div class="stat cat-stat ${CAT_CLASS[cat]||''}"><div class="n">${count}</div><div class="l">${cat}</div></div>`;
+  }).join('');
+}
+
+function renderAll(){
+  renderStats();
+  renderAllMatters();
+  renderOngoing();
+  renderFinished();
+  renderClosed();
+}
+
+// ---------- All matters (grouped) ----------
+function matterLawAreas(m){
+  return [...new Set(m.categories.map(c=>CATEGORY_LAW_AREA[c]).filter(Boolean))];
+}
+function filterAllMatters(){
+  const q = document.getElementById('am-search').value.trim().toLowerCase();
+  const month = document.getElementById('am-month').value;
+  const source = document.getElementById('am-source').value;
+  const category = document.getElementById('am-category').value;
+  const lawarea = document.getElementById('am-lawarea').value;
+  const status = document.getElementById('am-status').value;
+  return MATTERS.filter(m=>{
+    if(q && m.no.toLowerCase().indexOf(q)===-1 && (m.clientRef||'').toLowerCase().indexOf(q)===-1) return false;
+    if(month && m.month!==month) return false;
+    if(source && m.source!==source) return false;
+    if(category && m.categories.indexOf(category)===-1) return false;
+    if(lawarea && matterLawAreas(m).indexOf(lawarea)===-1) return false;
+    if(status && m.status!==status) return false;
+    return true;
+  });
+}
+
+function matterRow(m, colCount){
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="no">${m.no}${m.custom?'<span class="custom-tag">imported</span>':''}</td>
+    <td></td>
+    <td class="month-tag">${MONTH_LABEL[m.month]||m.month}</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>`;
+  const refTd = tr.children[1];
+  refTd.appendChild(clientRefInput(m));
+  const srcTd = tr.children[3];
+  srcTd.appendChild(optionList(SOURCES, m.source, v=>{ m.source=v; setOverride('source',m.id,v); renderAll(); }));
+  const catTd = tr.children[4];
+  catTd.appendChild(categoryEditor(m));
+  const statTd = tr.children[5];
+  statTd.appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
+  const actionTd = tr.children[6];
+  actionTd.innerHTML = `<button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button>`;
+  if(m.custom) actionTd.appendChild(deleteBtn(m));
+  return tr;
+}
+
+function buildMatterTable(rows){
+  const table = document.createElement('table');
+  table.innerHTML = `<thead><tr><th>No.</th><th>Client name</th><th>Month</th><th>Source</th><th>Category</th><th>Status</th><th></th></tr></thead><tbody></tbody>`;
+  const tbody = table.querySelector('tbody');
+  rows.forEach(m=>{
+    tbody.appendChild(matterRow(m));
+    tbody.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 7));
+  });
+  return table;
+}
+
+function renderAllMatters(){
+  const rows = filterAllMatters();
+  document.getElementById('am-count').textContent = rows.length + ' of ' + MATTERS.length + ' matters shown';
+  const groupBy = document.getElementById('am-groupby').value;
+  const container = document.getElementById('am-groups');
+  container.innerHTML = '';
+
+  if(rows.length===0){
+    container.innerHTML = '<div class="empty-state"><div class="icon">◇</div>No matters match this filter.<div class="sub">Try widening the month, source or category filter above.</div></div>';
+    return;
+  }
+
+  if(groupBy==='none'){
+    container.appendChild(buildMatterTable(rows));
+    return;
+  }
+
+  let groups = {};
+  if(groupBy==='month'){
+    MONTHS.forEach(mo=>groups[mo]=[]);
+    rows.forEach(m=>{ (groups[m.month] = groups[m.month]||[]).push(m); });
+  } else if(groupBy==='source'){
+    SOURCES.forEach(s=>groups[s]=[]);
+    rows.forEach(m=>{ (groups[m.source] = groups[m.source]||[]).push(m); });
+  } else if(groupBy==='category'){
+    CATEGORIES.forEach(c=>groups[c]=[]);
+    groups['Uncategorised'] = [];
+    rows.forEach(m=>{
+      if(m.categories.length===0){ groups['Uncategorised'].push(m); }
+      else { m.categories.forEach(c=>{ (groups[c] = groups[c]||[]).push(m); }); }
+    });
+  } else if(groupBy==='lawarea'){
+    LAW_AREAS.forEach(a=>groups[a]=[]);
+    groups['Unclassified'] = [];
+    rows.forEach(m=>{
+      const areas = matterLawAreas(m);
+      if(areas.length===0){ groups['Unclassified'].push(m); }
+      else { areas.forEach(a=>{ (groups[a] = groups[a]||[]).push(m); }); }
+    });
+  }
+
+  Object.keys(groups).forEach(key=>{
+    const groupRows = groups[key];
+    if(!groupRows || groupRows.length===0) return;
+    const label = groupBy==='month' ? (MONTH_LABEL[key]||key) : key;
+    const header = document.createElement('div');
+    header.className = 'section-header';
+    header.textContent = label + ' (' + groupRows.length + ')';
+    container.appendChild(header);
+    container.appendChild(buildMatterTable(groupRows));
+  });
+}
+
+// ---------- Ongoing ----------
+function filterOngoing(){
+  const month = document.getElementById('o-month').value;
+  return MATTERS.filter(m=>{
+    if(m.status!=='Active') return false;
+    if(month && m.month!==month) return false;
+    return true;
+  });
+}
+function renderOngoing(){
+  const rows = filterOngoing();
+  document.getElementById('o-count').textContent = rows.length + ' matter' + (rows.length===1?'':'s');
+  const body = document.getElementById('o-body');
+  body.innerHTML = '';
+  rows.forEach(m=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="no">${m.no}${m.custom?'<span class="custom-tag">imported</span>':''}</td>
+      <td></td>
+      <td class="month-tag">${MONTH_LABEL[m.month]||m.month}</td>
+      <td></td><td></td><td></td>
+      <td><button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button></td>`;
+    tr.children[1].appendChild(clientRefInput(m));
+    tr.children[3].appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
+    tr.children[4].appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
+    tr.children[5].appendChild(detailInput(m));
+    body.appendChild(tr);
+    body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 7));
+  });
+  if(rows.length===0) body.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">◇</div>No ongoing matters match this filter.</div></td></tr>';
+}
+
+// ---------- Finished / concluded ----------
+function filterFinished(){
+  const month = document.getElementById('f-month').value;
+  return MATTERS.filter(m=>{
+    if(m.status!=='Finished / concluded' && m.status!=='Not proceeding') return false;
+    if(month && m.month!==month) return false;
+    return true;
+  });
+}
+function renderFinished(){
+  const rows = filterFinished();
+  document.getElementById('f-count').textContent = rows.length + ' matter' + (rows.length===1?'':'s');
+  const body = document.getElementById('f-body');
+  body.innerHTML = '';
+  rows.forEach(m=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="no">${m.no}${m.custom?'<span class="custom-tag">imported</span>':''}</td>
+      <td></td>
+      <td class="month-tag">${MONTH_LABEL[m.month]||m.month}</td>
+      <td>${categoryReadonly(m.categories)}</td>
+      <td></td><td></td><td></td>
+      <td><button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button></td>`;
+    tr.children[1].appendChild(clientRefInput(m));
+    tr.children[4].appendChild((()=>{ const s = document.createElement('span'); s.className='pill '+pillClassStatus(m.status); s.textContent=m.status; return s; })());
+    tr.children[5].appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
+    tr.children[6].appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
+    body.appendChild(tr);
+    body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 8));
+  });
+  if(rows.length===0) body.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon">◇</div>No matters with this status.</div></td></tr>';
+}
+
+// ---------- Closed ----------
+function filterClosed(){
+  const month = document.getElementById('c-month').value;
+  return MATTERS.filter(m=>{
+    const qualifies = m.status==='Closed' || (m.status==='Not proceeding' && hasLegalAid(m));
+    if(!qualifies) return false;
+    if(month && m.month!==month) return false;
+    return true;
+  });
+}
+function renderClosed(){
+  const rows = filterClosed();
+  document.getElementById('c-count').textContent = rows.length + ' matter' + (rows.length===1?'':'s');
+  const body = document.getElementById('c-body');
+  body.innerHTML = '';
+  rows.forEach(m=>{
+    const tr = document.createElement('tr');
+    if(m.status==='Not proceeding' && hasLegalAid(m)) tr.classList.add('laa-flag');
+    tr.innerHTML = `<td class="no">${m.no}${m.custom?'<span class="custom-tag">imported</span>':''}</td>
+      <td></td>
+      <td class="month-tag">${MONTH_LABEL[m.month]||m.month}</td>
+      <td>${categoryReadonly(m.categories)}</td>
+      <td></td><td></td><td></td>
+      <td><button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button></td>`;
+    tr.children[1].appendChild(clientRefInput(m));
+    tr.children[4].appendChild((()=>{ const s = document.createElement('span'); s.className='pill '+pillClassStatus(m.status); s.textContent=m.status; return s; })());
+    tr.children[5].appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
+    tr.children[6].appendChild(outcomeInput(m));
+    body.appendChild(tr);
+    body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 8));
+  });
+  if(rows.length===0) body.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon">◇</div>No closed matters match this filter.</div></td></tr>';
+}
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+  });
+});
+
+['am-search','am-groupby','am-month','am-source','am-category','am-lawarea','am-status'].forEach(id=>document.getElementById(id).addEventListener('input', renderAllMatters));
+document.getElementById('o-month').addEventListener('change', renderOngoing);
+document.getElementById('f-month').addEventListener('change', renderFinished);
+document.getElementById('c-month').addEventListener('change', renderClosed);
+
+// ---------- PDF export (print) ----------
+function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function buildPrintHtml(title, subtitle, columns, rows){
+  let h = '<div style="font-family:\'IBM Plex Sans\',Arial,sans-serif;color:#182842;">';
+  h += '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#96702A;margin-bottom:4px;">Dillex Solicitors — family law</div>';
+  h += '<h1 style="font-family:\'Source Serif 4\',Georgia,serif;font-size:20px;margin:0 0 4px;">'+esc(title)+'</h1>';
+  h += '<div style="font-size:10.5px;color:#666f7d;margin-bottom:14px;">'+esc(subtitle)+' · generated '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})+' · '+rows.length+' matter'+(rows.length===1?'':'s')+'</div>';
+  h += '<table style="width:100%;border-collapse:collapse;font-size:10.5px;"><thead><tr>';
+  columns.forEach(c=>h+='<th style="text-align:left;border-bottom:1px solid #182842;padding:4px 6px;text-transform:uppercase;letter-spacing:.03em;color:#666f7d;font-size:9px;">'+esc(c)+'</th>');
+  h += '</tr></thead><tbody>';
+  rows.forEach(r=>{
+    h += '<tr>' + r.map(v=>'<td style="border-bottom:1px solid #DCD5C4;padding:4px 6px;vertical-align:top;">'+esc(v)+'</td>').join('') + '</tr>';
+  });
+  h += '</tbody></table></div>';
+  return h;
+}
+function printRows(title, subtitle, columns, rows){
+  document.getElementById('print-area').innerHTML = buildPrintHtml(title, subtitle, columns, rows);
+  window.print();
+}
+function monthLabel(prefix){
+  const el = document.getElementById(prefix+'-month');
+  if(!el || !el.value) return 'All months';
+  return MONTH_LABEL[el.value] || el.value;
+}
+
+document.getElementById('am-export').addEventListener('click', ()=>{
+  const rows = filterAllMatters();
+  const cols = ['No.','Client name','Month','Source','Category','Status'];
+  const data = rows.map(m=>[m.no, m.clientRef, MONTH_LABEL[m.month]||m.month, m.source, m.categories.join('; ')||'—', m.status]);
+  printRows('All matters', monthLabel('am'), cols, data);
+});
+document.getElementById('o-export').addEventListener('click', ()=>{
+  const rows = filterOngoing();
+  const cols = ['No.','Client name','Month','Legal aid','Status','Next action / details'];
+  const data = rows.map(m=>[m.no, m.clientRef, MONTH_LABEL[m.month]||m.month, m.legalAid, m.status, m.detail]);
+  printRows('Ongoing matters', monthLabel('o'), cols, data);
+});
+document.getElementById('f-export').addEventListener('click', ()=>{
+  const rows = filterFinished();
+  const cols = ['No.','Client name','Month','Category','Status','Legal aid'];
+  const data = rows.map(m=>[m.no, m.clientRef, MONTH_LABEL[m.month]||m.month, m.categories.join('; ')||'—', m.status, m.legalAid]);
+  printRows('Finished / concluded', monthLabel('f'), cols, data);
+});
+document.getElementById('c-export').addEventListener('click', ()=>{
+  const rows = filterClosed();
+  const cols = ['No.','Client name','Month','Category','Status','Legal aid','Outcome'];
+  const data = rows.map(m=>[m.no, m.clientRef, MONTH_LABEL[m.month]||m.month, m.categories.join('; ')||'—', m.status, m.legalAid, m.outcome]);
+  printRows('Closed files', monthLabel('c'), cols, data);
+});
+
+// ---------- Backup / restore ----------
+document.getElementById('backup-btn').addEventListener('click', ()=>{
+  const dump = {};
+  if(storageOK){
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.indexOf('dillex-')===0) dump[k] = localStorage.getItem(k);
+    }
+  }
+  const payload = { source:'dillex-case-dashboard', exported: new Date().toISOString(), edits: dump };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = 'dillex-docket-backup-'+d+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+document.getElementById('restore-btn').addEventListener('click', ()=>{
+  document.getElementById('restore-file').click();
+});
+document.getElementById('restore-file').addEventListener('change', (ev)=>{
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result);
+      const edits = parsed.edits || parsed;
+      if(!storageOK){ showToast('Local storage is blocked in this browser, so restored edits can\'t be saved here.', 'warn'); return; }
+      let count = 0;
+      Object.keys(edits).forEach(k=>{
+        if(k.indexOf('dillex-')===0){ localStorage.setItem(k, edits[k]); count++; }
+      });
+      showInfoModal('Edits restored', 'Restored '+count+' saved edit'+(count===1?'':'s')+'. The page will now reload.');
+      setTimeout(()=>location.reload(), 900);
+    }catch(e){
+      showToast('That file doesn\'t look like a valid backup — could not read it as JSON.', 'warn');
+    }
+  };
+  reader.readAsText(file);
+});
+
+renderAll();
+
+// ---------- Add new month (with roll-forward) ----------
+document.getElementById('add-month-btn').addEventListener('click', ()=>{
+  if(!storageOK){ showToast('Local storage is blocked in this browser, so a new month can\'t be saved here.', 'warn'); return; }
+  const suggested = suggestNextMonth();
+  showPromptModal(
+    'Add a new month',
+    'This will also move forward any matter still active or not proceeding from ' + titleCase(MONTHS[MONTHS.length-1]) + ' — nothing finished or closed gets moved.',
+    suggested,
+    (value)=>{
+      const code = (value||'').trim().toUpperCase();
+      if(!code) return;
+      if(MONTHS.indexOf(code) > -1){ showToast(titleCase(code) + ' already exists.', 'warn'); return; }
+
+      const previousLastMonth = MONTHS[MONTHS.length - 1];
+      MONTHS.push(code);
+      MONTH_LABEL[code] = titleCase(code);
+      saveExtraMonths();
+
+      const toRoll = MATTERS.filter(m => m.month === previousLastMonth && m.status !== 'Finished / concluded' && m.status !== 'Closed');
+      toRoll.forEach(m=>{
+        setOverride('month', m.id, code);
+      });
+
+      refreshMonthSelects();
+      rebuildData();
+      renderAll();
+      showToast('Added ' + titleCase(code) + '. Rolled ' + toRoll.length + ' unfinished matter' + (toRoll.length===1?'':'s') + ' forward from ' + titleCase(previousLastMonth) + '.', 'success');
+    }
+  );
+});
+
+// ---------- Add matter (manual, single entry) ----------
+let nmDraftCategories = [];
+
+function renderNmCategoryPills(){
+  const wrap = document.getElementById('nm-categories');
+  wrap.innerHTML = '';
+  CATEGORIES.forEach(cat=>{
+    const btn = document.createElement('button');
+    const on = nmDraftCategories.indexOf(cat) > -1;
+    btn.type = 'button';
+    btn.className = 'cat-pill ' + (CAT_CLASS[cat]||'') + (on ? ' on' : '');
+    btn.textContent = cat;
+    btn.addEventListener('click', ()=>{
+      const idx = nmDraftCategories.indexOf(cat);
+      if(idx>-1) nmDraftCategories.splice(idx,1); else nmDraftCategories.push(cat);
+      renderNmCategoryPills();
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function resetNmForm(){
+  document.getElementById('nm-month').value = '';
+  document.getElementById('nm-clientref').value = '';
+  document.getElementById('nm-source').value = SOURCES[0];
+  document.getElementById('nm-status').value = 'Active';
+  document.getElementById('nm-laa').value = 'Unknown';
+  document.getElementById('nm-detail').value = '';
+  document.getElementById('nm-month-error').classList.remove('show');
+  nmDraftCategories = [];
+  renderNmCategoryPills();
+}
+resetNmForm();
+document.getElementById('nm-month').addEventListener('change', ()=>{
+  document.getElementById('nm-month-error').classList.remove('show');
+});
+
+document.getElementById('add-matter-toggle').addEventListener('click', ()=>{
+  const form = document.getElementById('add-matter-form');
+  const showing = form.style.display !== 'none';
+  form.style.display = showing ? 'none' : 'block';
+  if(!showing){
+    form.style.animation = 'none';
+    void form.offsetWidth;
+    form.style.animation = 'panelFade .16s ease-out';
+    document.getElementById('nm-month').focus();
+  }
+});
+document.getElementById('nm-cancel').addEventListener('click', ()=>{
+  document.getElementById('add-matter-form').style.display = 'none';
+  resetNmForm();
+});
+document.getElementById('nm-submit').addEventListener('click', ()=>{
+  const month = document.getElementById('nm-month').value;
+  const errEl = document.getElementById('nm-month-error');
+  if(!month){ errEl.classList.add('show'); document.getElementById('nm-month').focus(); return; }
+  errEl.classList.remove('show');
+  if(!storageOK){ showToast('Local storage is blocked in this browser, so a new matter can\'t be saved here.', 'warn'); return; }
+  const clientRef = document.getElementById('nm-clientref').value.trim();
+  const source = document.getElementById('nm-source').value;
+  const status = document.getElementById('nm-status').value;
+  const legalAid = document.getElementById('nm-laa').value;
+  const detail = document.getElementById('nm-detail').value.trim();
+
+  const existing = getCustomRaw();
+  const existingNos = MATTERS.map(m=>parseInt(m.no,10)).filter(n=>!isNaN(n));
+  const nextNo = (existingNos.length ? Math.max(...existingNos) : 0) + 1;
+  const id = 'mc'+Date.now();
+  const caseNo = String(nextNo).padStart(3,'0');
+  const record = { id, no:caseNo, month, clientRef, source, categories:[...nmDraftCategories], status, legalAid, detail };
+  saveCustomRaw(existing.concat([record]));
+  rebuildData();
+  renderAll();
+  document.getElementById('add-matter-form').style.display = 'none';
+  resetNmForm();
+  showToast('Case '+caseNo+' added to All matters.', 'success');
+});
+
+// ---------- CSV import ----------
+function splitCSVLine(line){
+  const result = []; let cur = ''; let inQuotes = false;
+  for(let i=0;i<line.length;i++){
+    const ch = line[i];
+    if(inQuotes){
+      if(ch === '"'){ if(line[i+1] === '"'){ cur+='"'; i++; } else { inQuotes = false; } }
+      else { cur += ch; }
+    } else {
+      if(ch === '"'){ inQuotes = true; }
+      else if(ch === ','){ result.push(cur); cur = ''; }
+      else { cur += ch; }
+    }
+  }
+  result.push(cur);
+  return result;
+}
+function parseCSV(text){
+  const lines = text.split(/\r\n|\n/).filter(l=>l.trim().length>0);
+  if(lines.length===0) return [];
+  const headers = splitCSVLine(lines[0]).map(h=>h.trim().toLowerCase());
+  const rows = [];
+  for(let i=1;i<lines.length;i++){
+    const cells = splitCSVLine(lines[i]);
+    const obj = {};
+    headers.forEach((h,idx)=>{ obj[h] = (cells[idx]||'').trim(); });
+    rows.push(obj);
+  }
+  return rows;
+}
+function pickField(row, aliases){
+  for(const a of aliases){ if(row[a] !== undefined && row[a] !== '') return row[a]; }
+  return '';
+}
+function matchOrDefault(value, allowed, fallback){
+  const found = allowed.find(a=>a.toLowerCase()===value.trim().toLowerCase());
+  return found || fallback;
+}
+
+document.getElementById('template-btn').addEventListener('click', ()=>{
+  const csv = 'Month,Client name,Source,Categories,Status,Legal aid,Reference\n'
+    + 'AUGUST,,NCDV,Domestic abuse,Active,Unknown,\n'
+    + 'AUGUST,,CourtNav,Section 8 orders;Financials,Active,Applied,\n';
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'dillex-matters-import-template.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('import-btn').addEventListener('click', ()=>{
+  document.getElementById('import-file').click();
+});
+document.getElementById('import-file').addEventListener('change', (ev)=>{
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    let parsedRows;
+    try{ parsedRows = parseCSV(reader.result); }
+    catch(e){ showToast('Could not read that file as CSV.', 'warn'); return; }
+
+    const existing = getCustomRaw();
+    const existingNos = MATTERS.map(m=>parseInt(m.no,10)).filter(n=>!isNaN(n));
+    let nextNo = (existingNos.length ? Math.max(...existingNos) : 0) + 1;
+    const added = [];
+    const latestMonth = MONTHS[MONTHS.length - 1];
+
+    parsedRows.forEach((row, idx)=>{
+      const month = matchOrDefault(pickField(row,['month']), MONTHS, latestMonth);
+      const clientRef = pickField(row,['client name','client','client ref','clientref','client reference']);
+      const source = matchOrDefault(pickField(row,['source']), SOURCES, 'Unspecified');
+      const catsRaw = pickField(row,['categories','category']);
+      const categories = catsRaw ? catsRaw.split(';').map(c=>matchOrDefault(c.trim(), CATEGORIES, null)).filter(Boolean) : [];
+      const status = matchOrDefault(pickField(row,['status']), STATUSES, 'Active');
+      const legalAid = matchOrDefault(pickField(row,['legal aid','legalaid','laa']), LAAS, 'Unknown');
+      const ref = pickField(row,['reference','ref','no','case no']);
+      const no = ref || String(nextNo++).padStart(3,'0');
+      const id = 'mc'+Date.now()+'-'+idx;
+      added.push({ id, no, month, clientRef, source, categories, status, legalAid, detail:'' });
+    });
+
+    if(added.length===0){
+      showToast('No rows found to import — check the CSV has data rows beneath the header.', 'warn');
+      return;
+    }
+    if(!storageOK){
+      showToast('Local storage is blocked in this browser, so imported matters can\'t be saved here.', 'warn');
+      return;
+    }
+    saveCustomRaw(existing.concat(added));
+    rebuildData();
+    renderAll();
+    showToast('Imported '+added.length+' matter'+(added.length===1?'':'s')+' into All matters.', 'success');
+  };
+  reader.readAsText(file);
+});
+</script>
+</body>
+</html>
