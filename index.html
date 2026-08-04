@@ -190,6 +190,12 @@
       <input type="file" id="import-file" accept=".csv,text/csv" style="display:none;">
       <button class="tbtn ghost" id="template-btn">⬇ CSV template</button>
     </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <span class="toolbar-label">Sample data</span>
+      <button class="tbtn ghost" id="restore-samples-btn">↺ Restore removed placeholders</button>
+      <button class="tbtn ghost" id="clear-samples-btn">✕ Clear all placeholders</button>
+    </div>
   </div>
 
   <div class="overview-label">Overview by status</div>
@@ -299,8 +305,8 @@
       <p>This is a single HTML file with the docket data written into it. It doesn't need installing, doesn't need an internet connection, and doesn't talk to Clio or anyone else's computer. Opening it means double-clicking the file.</p>
 
       <div class="tagline">This copy</div>
-      <h3>Ten sample matters, for trying the tool out</h3>
-      <p>The data in this version is 10 illustrative matters, not a live export — enough to try every feature (grouping, category pills, the four status pages, legal aid flags, PDF export, CSV import) without wading through a full caseload. When you're ready to load the real docket, use <strong>Import matters from CSV</strong>, or ask for a version rebuilt from a fresh Clio export.</p>
+      <h3>The original docket, restored</h3>
+      <p>This version carries the full de-identified working docket — 102 matters, case numbers as they were originally assigned from the Clio export (cases 100–102 are three that existed in the old ongoing tracker with no matching intake record, carried over as their own entries). Every matter can still be edited or removed individually, or cleared in bulk from the "Sample data" toolbar group if you'd rather start from empty and build up via <strong>Add matter</strong> or <strong>Import matters from CSV</strong>.</p>
 
       <div class="tagline">Client names</div>
       <h3>The sample data has none — the "Client name" field is optional and entirely up to you</h3>
@@ -378,18 +384,110 @@ const CAT_CLASS = {
 };
 
 // [no, month, source, categories(;-separated), status, legalAid, detail]
-// Sample data only — 10 illustrative matters to try the tool with.
+// De-identified, restored to the fuller original docket (102 matters, case numbers as originally assigned).
 const MATTERS_RAW = [
-["001","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
-["002","PRE-MAY","DAA","Domestic abuse;Section 8 orders","Active","Applied","Barrister booked for final hearing"],
-["003","PRE-MAY","CourtNav","Section 8 orders","Active","Unknown",""],
-["004","MAY","Referral","Care proceedings","Active","Unknown","Care matter — next review 12 Aug"],
-["005","MAY","NCDV","Domestic abuse","Not proceeding","Granted",""],
-["006","JUNE","DAA","Transfer of tenancy;Financials","Active","Unknown","TOT hearing listed 15 Jun"],
-["007","JUNE","CourtNav","Domestic abuse","Finished / concluded","Applied",""],
-["008","JULY","NCDV","Financials","Closed","Granted",""],
-["009","JULY","Referral","Domestic abuse","Active","Unknown","Awaiting client response — chase due"],
-["010","JULY","DAA","Section 8 orders","Active","Applied","Next hearing 12 Aug"],
+["001","PRE-MAY","NCDV","","Active","Unknown",""],
+["002","PRE-MAY","DAA","","Active","Unknown",""],
+["003","PRE-MAY","NCDV","","Active","Unknown",""],
+["004","PRE-MAY","NCDV","","Active","Unknown",""],
+["005","PRE-MAY","DAA","","Active","Unknown",""],
+["006","PRE-MAY","DAA","","Active","Unknown",""],
+["007","PRE-MAY","DAA","Section 8 orders","Active","Unknown","Forced marriage, CAO, PSO — amended LAA"],
+["008","PRE-MAY","DAA","","Active","Unknown",""],
+["009","PRE-MAY","DAA","","Active","Unknown",""],
+["010","PRE-MAY","NCDV","","Active","Unknown",""],
+["011","PRE-MAY","NCDV","","Active","Unknown",""],
+["012","PRE-MAY","CourtNav","","Active","Unknown",""],
+["013","PRE-MAY","NCDV","","Active","Unknown",""],
+["014","PRE-MAY","DAA","","Active","Unknown",""],
+["015","PRE-MAY","CourtNav","","Active","Unknown",""],
+["016","PRE-MAY","DAA","","Active","Unknown",""],
+["017","PRE-MAY","DAA","Transfer of tenancy","Active","Unknown","TOT 15 Jun — R statement — barrister booked"],
+["018","PRE-MAY","DAA","Domestic abuse;Section 8 orders;Financials","Active","Unknown","Finance — 23 Jul — barrister booked"],
+["019","PRE-MAY","DAA","Domestic abuse","Active","Unknown",""],
+["020","PRE-MAY","DAA","Domestic abuse","Not proceeding","Unknown",""],
+["021","PRE-MAY","DAA","Domestic abuse","Active","Unknown",""],
+["022","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
+["023","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
+["024","PRE-MAY","NCDV","Domestic abuse","Not proceeding","Unknown",""],
+["025","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
+["026","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
+["027","PRE-MAY","NCDV","Domestic abuse","Not proceeding","Unknown",""],
+["028","PRE-MAY","NCDV","","Active","Unknown",""],
+["029","PRE-MAY","NCDV","","Not proceeding","Unknown",""],
+["030","PRE-MAY","CourtNav","","Not proceeding","Unknown",""],
+["031","PRE-MAY","NCDV","","Active","Unknown",""],
+["032","PRE-MAY","NCDV","","Active","Unknown",""],
+["033","PRE-MAY","CourtNav","Domestic abuse","Active","Unknown",""],
+["034","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
+["035","PRE-MAY","NCDV","","Active","Unknown",""],
+["036","PRE-MAY","NCDV","Domestic abuse","Not proceeding","Unknown",""],
+["037","PRE-MAY","DAA","Domestic abuse","Active","Unknown",""],
+["038","PRE-MAY","DAA","Domestic abuse","Active","Unknown",""],
+["039","PRE-MAY","DAA","Domestic abuse;Section 8 orders","Active","Unknown","CAO — next hearing 10 Jun — counsel booked"],
+["040","PRE-MAY","DAA","Domestic abuse","Active","Unknown",""],
+["041","PRE-MAY","DAA","Domestic abuse;Section 8 orders","Active","Unknown",""],
+["042","PRE-MAY","DAA","","Active","Unknown",""],
+["043","PRE-MAY","DAA","Domestic abuse","Active","Unknown",""],
+["044","PRE-MAY","DAA","Domestic abuse","Not proceeding","Unknown",""],
+["045","PRE-MAY","DAA","Domestic abuse","Not proceeding","Unknown",""],
+["046","PRE-MAY","DAA","Domestic abuse","Active","Unknown",""],
+["047","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
+["048","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
+["049","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
+["050","PRE-MAY","NCDV","Domestic abuse","Active","Unknown","Listed 28 Apr"],
+["051","PRE-MAY","NCDV","Domestic abuse","Active","Unknown","Chasing NOH"],
+["052","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
+["053","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
+["054","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
+["055","PRE-MAY","CourtNav","Domestic abuse","Active","Unknown",""],
+["056","PRE-MAY","DAA","","Active","Unknown",""],
+["057","PRE-MAY","NCDV","","Active","Unknown",""],
+["058","PRE-MAY","CourtNav","Domestic abuse","Active","Unknown",""],
+["059","PRE-MAY","CourtNav","Domestic abuse","Active","Unknown",""],
+["060","PRE-MAY","DAA","","Active","Unknown",""],
+["061","PRE-MAY","DAA","","Active","Unknown",""],
+["062","PRE-MAY","DAA","","Active","Unknown",""],
+["063","PRE-MAY","DAA","","Active","Unknown",""],
+["064","PRE-MAY","DAA","","Active","Unknown",""],
+["065","PRE-MAY","DAA","","Active","Unknown",""],
+["066","PRE-MAY","DAA","","Active","Unknown",""],
+["067","PRE-MAY","DAA","","Active","Unknown","Amend witness statement"],
+["068","PRE-MAY","DAA","","Active","Unknown",""],
+["069","PRE-MAY","DAA","","Active","Unknown",""],
+["070","PRE-MAY","DAA","","Active","Unknown",""],
+["071","PRE-MAY","DAA","","Active","Unknown",""],
+["072","MAY","Referral","","Active","Unknown",""],
+["073","MAY","Referral","","Active","Unknown",""],
+["074","MAY","Referral","","Active","Unknown",""],
+["075","MAY","Referral","","Active","Unknown",""],
+["076","MAY","NCDV","","Active","Unknown",""],
+["077","MAY","DAA","Care proceedings","Active","Unknown","Care matter"],
+["078","MAY","DAA","","Active","Unknown",""],
+["079","JUNE","DAA","Domestic abuse","Active","Unknown",""],
+["080","JUNE","DAA","Domestic abuse","Active","Unknown",""],
+["081","JUNE","DAA","","Active","Unknown",""],
+["082","JUNE","DAA","Domestic abuse","Active","Unknown",""],
+["083","JUNE","NCDV","Domestic abuse","Active","Unknown",""],
+["084","JUNE","DAA","","Active","Unknown",""],
+["085","JUNE","DAA","","Active","Unknown",""],
+["086","JULY","Referral","","Active","Applied",""],
+["087","JULY","NCDV","","Active","Applied","Court date 31 Jul"],
+["088","JULY","Referral","","Active","Applied",""],
+["089","JULY","Referral","","Active","Applied",""],
+["090","JULY","Referral","","Active","Applied",""],
+["091","JULY","Referral","","Active","Applied",""],
+["092","JULY","Referral","","Active","Applied","Court date 5 Aug"],
+["093","JULY","NCDV","","Active","Not applied",""],
+["094","JULY","NCDV","","Active","Unknown",""],
+["095","JULY","NCDV","","Active","Applied",""],
+["096","JULY","Referral","","Active","Applied",""],
+["097","JULY","Referral","","Active","Applied",""],
+["098","JULY","Referral","","Closed","N/A - private client","Instructed CSS Law — another firm"],
+["099","JULY","CourtNav","","Active","Unknown",""],
+["100","PRE-MAY","Unspecified","","Active","Unknown","Amend LAA — vary order (not on intake list)"],
+["101","PRE-MAY","Unspecified","Section 8 orders","Active","Unknown","CAO (not on intake list)"],
+["102","PRE-MAY","Unspecified","","Active","Unknown","Listed 21 May (not on intake list)"],
 ];
 
 let storageOK = true;
@@ -514,22 +612,24 @@ function saveCustomRaw(arr){
 }
 
 function buildMatters(){
-  const base = MATTERS_RAW.map(r=>{
-    const id = 'm'+r[0];
-    const catOverride = getOverride('cats', id);
-    const cats = catOverride ? JSON.parse(catOverride) : (r[3] ? r[3].split(';') : []);
-    return {
-      id, no:r[0], month: getOverride('month',id) || r[1],
-      clientRef: getOverride('clientref',id) || '',
-      source: getOverride('source',id) || r[2],
-      categories: cats,
-      status: getOverride('status',id) || r[4],
-      legalAid: getOverride('laa',id) || r[5],
-      detail: getOverride('detail',id) !== null ? getOverride('detail',id) : r[6],
-      outcome: getOverride('outcome',id) || '',
-      custom:false
-    };
-  });
+  const base = MATTERS_RAW
+    .filter(r => getOverride('deleted', 'm'+r[0]) !== '1')
+    .map(r=>{
+      const id = 'm'+r[0];
+      const catOverride = getOverride('cats', id);
+      const cats = catOverride ? JSON.parse(catOverride) : (r[3] ? r[3].split(';') : []);
+      return {
+        id, no:r[0], month: getOverride('month',id) || r[1],
+        clientRef: getOverride('clientref',id) || '',
+        source: getOverride('source',id) || r[2],
+        categories: cats,
+        status: getOverride('status',id) || r[4],
+        legalAid: getOverride('laa',id) || r[5],
+        detail: getOverride('detail',id) !== null ? getOverride('detail',id) : r[6],
+        outcome: getOverride('outcome',id) || '',
+        custom:false, sample:true
+      };
+    });
   const custom = getCustomRaw().map(o=>{
     const id = o.id;
     const catOverride = getOverride('cats', id);
@@ -543,7 +643,7 @@ function buildMatters(){
       legalAid: getOverride('laa',id) || o.legalAid,
       detail: getOverride('detail',id) !== null ? getOverride('detail',id) : (o.detail||''),
       outcome: getOverride('outcome',id) || '',
-      custom:true
+      custom:true, sample:false
     };
   });
   return base.concat(custom);
@@ -679,16 +779,23 @@ function outcomeInput(m){
 function deleteBtn(m){
   const btn = document.createElement('button');
   btn.className = 'del-btn';
-  btn.title = 'Remove this imported matter';
+  btn.title = 'Remove this matter';
   btn.textContent = '✕';
   btn.addEventListener('click', ()=>{
+    const message = m.sample
+      ? 'Remove case '+m.no+'? It\'s one of the sample placeholder matters — you can always add real matters in its place.'
+      : 'Remove case '+m.no+'? This can\'t be undone.';
     showConfirmModal(
       'Remove matter',
-      'Remove case '+m.no+' from the imported list? This can\'t be undone.',
+      message,
       ()=>{
-        const arr = getCustomRaw().filter(o=>o.id!==m.id);
-        saveCustomRaw(arr);
-        ['source','cats','status','laa','detail','outcome','note','clientref','month'].forEach(f=>{ try{ localStorage.removeItem('dillex-'+f+'-'+m.id); }catch(e){} });
+        if(m.custom){
+          const arr = getCustomRaw().filter(o=>o.id!==m.id);
+          saveCustomRaw(arr);
+          ['source','cats','status','laa','detail','outcome','note','clientref','month'].forEach(f=>{ try{ localStorage.removeItem('dillex-'+f+'-'+m.id); }catch(e){} });
+        } else {
+          setOverride('deleted', m.id, '1');
+        }
         rebuildData();
         renderAll();
         showToast('Case '+m.no+' removed.', 'success');
@@ -767,7 +874,7 @@ function filterAllMatters(){
     if(lawarea && matterLawAreas(m).indexOf(lawarea)===-1) return false;
     if(status && m.status!==status) return false;
     return true;
-  });
+  }).sort((a,b)=> (parseInt(a.no,10)||0) - (parseInt(b.no,10)||0));
 }
 
 function matterRow(m, colCount){
@@ -790,7 +897,7 @@ function matterRow(m, colCount){
   statTd.appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
   const actionTd = tr.children[6];
   actionTd.innerHTML = `<button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button>`;
-  if(m.custom) actionTd.appendChild(deleteBtn(m));
+  actionTd.appendChild(deleteBtn(m));
   return tr;
 }
 
@@ -883,6 +990,7 @@ function renderOngoing(){
     tr.children[3].appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
     tr.children[4].appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
     tr.children[5].appendChild(detailInput(m));
+    tr.children[6].appendChild(deleteBtn(m));
     body.appendChild(tr);
     body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 7));
   });
@@ -915,6 +1023,7 @@ function renderFinished(){
     tr.children[4].appendChild((()=>{ const s = document.createElement('span'); s.className='pill '+pillClassStatus(m.status); s.textContent=m.status; return s; })());
     tr.children[5].appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
     tr.children[6].appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
+    tr.children[7].appendChild(deleteBtn(m));
     body.appendChild(tr);
     body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 8));
   });
@@ -949,6 +1058,7 @@ function renderClosed(){
     tr.children[4].appendChild((()=>{ const s = document.createElement('span'); s.className='pill '+pillClassStatus(m.status); s.textContent=m.status; return s; })());
     tr.children[5].appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
     tr.children[6].appendChild(outcomeInput(m));
+    tr.children[7].appendChild(deleteBtn(m));
     body.appendChild(tr);
     body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 8));
   });
@@ -1064,6 +1174,34 @@ document.getElementById('restore-file').addEventListener('change', (ev)=>{
 });
 
 renderAll();
+
+// ---------- Restore removed sample placeholders ----------
+document.getElementById('restore-samples-btn').addEventListener('click', ()=>{
+  if(!storageOK){ showToast('Local storage is blocked in this browser.', 'warn'); return; }
+  const removedIds = MATTERS_RAW.map(r=>'m'+r[0]).filter(id=>getOverride('deleted', id)==='1');
+  if(removedIds.length===0){ showToast('No sample placeholders have been removed.', ''); return; }
+  removedIds.forEach(id=>{ try{ localStorage.removeItem('dillex-deleted-'+id); }catch(e){} });
+  rebuildData();
+  renderAll();
+  showToast('Restored '+removedIds.length+' sample matter'+(removedIds.length===1?'':'s')+'.', 'success');
+});
+
+document.getElementById('clear-samples-btn').addEventListener('click', ()=>{
+  if(!storageOK){ showToast('Local storage is blocked in this browser.', 'warn'); return; }
+  const remainingIds = MATTERS_RAW.map(r=>'m'+r[0]).filter(id=>getOverride('deleted', id)!=='1');
+  if(remainingIds.length===0){ showToast('No sample placeholders left to clear.', ''); return; }
+  showConfirmModal(
+    'Clear all sample placeholders',
+    'Remove all '+remainingIds.length+' remaining sample matter'+(remainingIds.length===1?'':'s')+'? Anything you\'ve added or imported yourself is untouched, and you can bring these back with "Restore removed placeholders" any time.',
+    ()=>{
+      remainingIds.forEach(id=>setOverride('deleted', id, '1'));
+      rebuildData();
+      renderAll();
+      showToast('Cleared '+remainingIds.length+' sample matter'+(remainingIds.length===1?'':'s')+'.', 'success');
+    },
+    'Clear all'
+  );
+});
 
 // ---------- Add new month (with roll-forward) ----------
 document.getElementById('add-month-btn').addEventListener('click', ()=>{
