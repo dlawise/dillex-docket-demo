@@ -171,7 +171,9 @@
 
   <div class="storage-note" id="storage-warning"></div>
 
-  <div class="toolbar">
+  <button class="tbtn ghost" id="options-toggle" style="margin-bottom:1rem;">⚙ Options &amp; tools</button>
+
+  <div class="toolbar" id="toolbar-panel" style="display:none;">
     <div class="toolbar-group">
       <span class="toolbar-label">Period</span>
       <button class="tbtn" id="add-month-btn">+ Add new month</button>
@@ -1132,21 +1134,35 @@ document.getElementById('c-export').addEventListener('click', ()=>{
 
 // ---------- Backup / restore ----------
 document.getElementById('backup-btn').addEventListener('click', ()=>{
+  if(!storageOK){
+    showToast('Local storage is blocked in this browser, so there\'s nothing here to back up.', 'warn');
+    return;
+  }
   const dump = {};
-  if(storageOK){
-    for(let i=0;i<localStorage.length;i++){
-      const k = localStorage.key(i);
-      if(k && k.indexOf('dillex-')===0) dump[k] = localStorage.getItem(k);
-    }
+  let keyCount = 0;
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    if(k && k.indexOf('dillex-')===0){ dump[k] = localStorage.getItem(k); keyCount++; }
+  }
+  if(keyCount===0){
+    showToast('No edits yet to back up — this copy is still at its starting state.', '');
+    return;
   }
   const payload = { source:'dillex-case-dashboard', exported: new Date().toISOString(), edits: dump };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  let blob;
+  try{
+    blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  }catch(e){
+    showToast('Could not prepare the backup file — try again.', 'warn');
+    return;
+  }
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const d = new Date().toISOString().slice(0,10);
   a.href = url; a.download = 'dillex-docket-backup-'+d+'.json';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  showToast('Backup downloaded — '+keyCount+' saved edit'+(keyCount===1?'':'s')+'.', 'success');
 });
 document.getElementById('restore-btn').addEventListener('click', ()=>{
   document.getElementById('restore-file').click();
@@ -1156,21 +1172,55 @@ document.getElementById('restore-file').addEventListener('change', (ev)=>{
   if(!file) return;
   const reader = new FileReader();
   reader.onload = ()=>{
+    ev.target.value = '';
+    if(!storageOK){ showToast('Local storage is blocked in this browser, so restored edits can\'t be saved here.', 'warn'); return; }
+    let parsed;
     try{
-      const parsed = JSON.parse(reader.result);
-      const edits = parsed.edits || parsed;
-      if(!storageOK){ showToast('Local storage is blocked in this browser, so restored edits can\'t be saved here.', 'warn'); return; }
-      let count = 0;
-      Object.keys(edits).forEach(k=>{
-        if(k.indexOf('dillex-')===0){ localStorage.setItem(k, edits[k]); count++; }
-      });
-      showInfoModal('Edits restored', 'Restored '+count+' saved edit'+(count===1?'':'s')+'. The page will now reload.');
-      setTimeout(()=>location.reload(), 900);
+      parsed = JSON.parse(reader.result);
     }catch(e){
       showToast('That file doesn\'t look like a valid backup — could not read it as JSON.', 'warn');
+      return;
     }
+    let edits = null;
+    if(parsed && typeof parsed === 'object' && !Array.isArray(parsed)){
+      if(parsed.edits && typeof parsed.edits === 'object' && !Array.isArray(parsed.edits)) edits = parsed.edits;
+      else edits = parsed;
+    }
+    if(!edits){
+      showToast('That file doesn\'t look like a Dillex docket backup.', 'warn');
+      return;
+    }
+    let count = 0, failed = 0;
+    Object.keys(edits).forEach(k=>{
+      if(k.indexOf('dillex-')===0){
+        try{ localStorage.setItem(k, edits[k]); count++; }
+        catch(e){ failed++; }
+      }
+    });
+    if(count===0){
+      showToast('Nothing in that file matched this docket — is this the right backup?', 'warn');
+      return;
+    }
+    const failNote = failed ? (' ('+failed+' couldn\'t be saved — your browser storage may be full.)') : '';
+    showInfoModal('Edits restored', 'Restored '+count+' saved edit'+(count===1?'':'s')+'.'+failNote+' The page will now reload.');
+    setTimeout(()=>location.reload(), 900);
+  };
+  reader.onerror = ()=>{
+    ev.target.value = '';
+    showToast('Could not read that file.', 'warn');
   };
   reader.readAsText(file);
+});
+
+document.getElementById('options-toggle').addEventListener('click', ()=>{
+  const panel = document.getElementById('toolbar-panel');
+  const showing = panel.style.display !== 'none';
+  panel.style.display = showing ? 'none' : 'flex';
+  if(!showing){
+    panel.style.animation = 'none';
+    void panel.offsetWidth;
+    panel.style.animation = 'panelFade .16s ease-out';
+  }
 });
 
 renderAll();
@@ -1371,6 +1421,7 @@ document.getElementById('import-file').addEventListener('change', (ev)=>{
   if(!file) return;
   const reader = new FileReader();
   reader.onload = ()=>{
+    ev.target.value = '';
     let parsedRows;
     try{ parsedRows = parseCSV(reader.result); }
     catch(e){ showToast('Could not read that file as CSV.', 'warn'); return; }
@@ -1407,6 +1458,10 @@ document.getElementById('import-file').addEventListener('change', (ev)=>{
     rebuildData();
     renderAll();
     showToast('Imported '+added.length+' matter'+(added.length===1?'':'s')+' into All matters.', 'success');
+  };
+  reader.onerror = ()=>{
+    ev.target.value = '';
+    showToast('Could not read that file.', 'warn');
   };
   reader.readAsText(file);
 });
