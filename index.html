@@ -1167,6 +1167,98 @@ document.getElementById('backup-btn').addEventListener('click', ()=>{
 document.getElementById('restore-btn').addEventListener('click', ()=>{
   document.getElementById('restore-file').click();
 });
+// ---------- Migrate older backup formats ----------
+// The category list, status list, and storage key names have all changed
+// across earlier versions of this tool. This translates old saved values
+// into the current schema so an older backup can still be restored.
+function migrateLegacyEdits(edits){
+  const OLD_CAT_MAP = {
+    'Non-molestation order':'Domestic abuse',
+    'Occupation order':'Domestic abuse',
+    'Child arrangements order':'Section 8 orders',
+    'Prohibited steps order':'Section 8 orders',
+    'Specific issues order':'Section 8 orders',
+    'Divorce & transfer of tenancy':'Transfer of tenancy',
+    'Domestic abuse':'Domestic abuse',
+    'Section 8 orders':'Section 8 orders',
+    'Care proceedings':'Care proceedings',
+    'Transfer of tenancy':'Transfer of tenancy',
+    'Financials':'Financials',
+    'Divorce':'Divorce'
+  };
+  const OLD_STATUS_MAP = { 'No response':'Active', 'Transferred out':'Closed' };
+
+  const migrated = {};
+  let migratedCount = 0;
+  let legacyCustom = null;
+
+  Object.keys(edits).forEach(k=>{
+    const val = edits[k];
+
+    // legacy singular category field: dillex-cat-<id> (current is plural dillex-cats-<id>)
+    const catMatch = k.match(/^dillex-cat-(.+)$/);
+    if(catMatch){
+      migrated['dillex-cats-'+catMatch[1]] = JSON.stringify([OLD_CAT_MAP[val] || val]);
+      migratedCount++;
+      return;
+    }
+    // legacy client-name field: dillex-name-<id> (current is dillex-clientref-<id>)
+    const nameMatch = k.match(/^dillex-name-(.+)$/);
+    if(nameMatch){
+      migrated['dillex-clientref-'+nameMatch[1]] = val;
+      migratedCount++;
+      return;
+    }
+    // legacy status values no longer in the current four-status list
+    const statusMatch = k.match(/^dillex-status-(.+)$/);
+    if(statusMatch && OLD_STATUS_MAP[val]){
+      migrated[k] = OLD_STATUS_MAP[val];
+      migratedCount++;
+      return;
+    }
+    // legacy custom-matters list, held under an earlier key name
+    if(k === 'dillex-custom-pipeline'){
+      try{ legacyCustom = JSON.parse(val); }catch(e){}
+      return;
+    }
+    // current-format category arrays may still contain old vocabulary
+    const catsMatch = k.match(/^dillex-cats-(.+)$/);
+    if(catsMatch){
+      try{
+        const arr = JSON.parse(val);
+        migrated[k] = JSON.stringify([...new Set(arr.map(c=>OLD_CAT_MAP[c]||c))]);
+      }catch(e){ migrated[k] = val; }
+      return;
+    }
+
+    migrated[k] = val;
+  });
+
+  if(legacyCustom && Array.isArray(legacyCustom) && legacyCustom.length){
+    let existing = [];
+    try{ existing = migrated['dillex-custom-matters'] ? JSON.parse(migrated['dillex-custom-matters']) : []; }catch(e){}
+    const translated = legacyCustom.map((o,idx)=>{
+      const rawCat = o.category || o.matterType || '';
+      const cats = rawCat ? [OLD_CAT_MAP[rawCat] || rawCat] : (o.categories || []);
+      return {
+        id: 'mig-'+(o.id || (Date.now()+'-'+idx)),
+        no: o.no || String(900+idx).padStart(3,'0'),
+        month: (MONTHS.indexOf((o.month||'').toUpperCase())>-1 ? o.month.toUpperCase() : 'PRE-MAY'),
+        clientRef: o.clientRef || o.name || o.clientName || '',
+        source: o.source || 'Unspecified',
+        categories: cats,
+        status: OLD_STATUS_MAP[o.status] || o.status || 'Active',
+        legalAid: o.legalAid || 'Unknown',
+        detail: o.detail || ''
+      };
+    });
+    migrated['dillex-custom-matters'] = JSON.stringify(existing.concat(translated));
+    migratedCount += translated.length;
+  }
+
+  return { edits: migrated, migratedCount };
+}
+
 document.getElementById('restore-file').addEventListener('change', (ev)=>{
   const file = ev.target.files[0];
   if(!file) return;
@@ -1190,10 +1282,12 @@ document.getElementById('restore-file').addEventListener('change', (ev)=>{
       showToast('That file doesn\'t look like a Dillex docket backup.', 'warn');
       return;
     }
+    const migration = migrateLegacyEdits(edits);
+    const finalEdits = migration.edits;
     let count = 0, failed = 0;
-    Object.keys(edits).forEach(k=>{
+    Object.keys(finalEdits).forEach(k=>{
       if(k.indexOf('dillex-')===0){
-        try{ localStorage.setItem(k, edits[k]); count++; }
+        try{ localStorage.setItem(k, finalEdits[k]); count++; }
         catch(e){ failed++; }
       }
     });
@@ -1202,7 +1296,8 @@ document.getElementById('restore-file').addEventListener('change', (ev)=>{
       return;
     }
     const failNote = failed ? (' ('+failed+' couldn\'t be saved — your browser storage may be full.)') : '';
-    showInfoModal('Edits restored', 'Restored '+count+' saved edit'+(count===1?'':'s')+'.'+failNote+' The page will now reload.');
+    const migrateNote = migration.migratedCount ? (' '+migration.migratedCount+' were from an older version of this tool and have been updated to the current format.') : '';
+    showInfoModal('Edits restored', 'Restored '+count+' saved edit'+(count===1?'':'s')+'.'+migrateNote+failNote+' The page will now reload.');
     setTimeout(()=>location.reload(), 900);
   };
   reader.onerror = ()=>{
