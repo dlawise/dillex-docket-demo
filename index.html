@@ -36,6 +36,8 @@
   .tbtn.ghost{border-color:var(--rule);color:var(--ink-soft);}
   .tbtn.ghost:hover{background:var(--grey-bg);color:var(--ink);border-color:var(--rule);}
   .overview-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-bottom:6px;}
+  .cat-overview-toggle{background:none;border:none;color:var(--ochre);font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;padding:2px 0;margin-bottom:1.5rem;}
+  .cat-overview-toggle:hover{text-decoration:underline;}
   .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin-bottom:1.25rem;}
   .stats.stats-cats{grid-template-columns:repeat(6,1fr);margin-bottom:2rem;}
   .stat{background:var(--paper);padding:12px 14px;transition:background-color .15s ease;}
@@ -153,6 +155,15 @@
 
   .field-error{font-size:11.5px;color:var(--burgundy);margin-top:4px;display:none;}
   .field-error.show{display:block;}
+
+  .sel-cell{width:24px;padding-right:2px !important;}
+  .sel-cell input, .select-all-label input{cursor:pointer;width:14px;height:14px;}
+  .selection-bar{display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--paper);padding:9px 14px;border-radius:3px;margin-bottom:10px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;animation:panelFade .14s ease-out;}
+  .selection-bar .tbtn{padding:5px 12px;font-size:11px;}
+  .selection-bar .tbtn.ghost{border-color:rgba(255,255,255,0.4);color:var(--paper);}
+  .selection-bar .tbtn.ghost:hover{background:rgba(255,255,255,0.15);color:var(--paper);}
+  .count-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;}
+  .select-all-label{font-size:12px;color:var(--slate);display:flex;align-items:center;gap:6px;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -192,18 +203,12 @@
       <input type="file" id="import-file" accept=".csv,text/csv" style="display:none;">
       <button class="tbtn ghost" id="template-btn">⬇ CSV template</button>
     </div>
-    <div class="toolbar-divider"></div>
-    <div class="toolbar-group">
-      <span class="toolbar-label">Sample data</span>
-      <button class="tbtn ghost" id="restore-samples-btn">↺ Restore removed placeholders</button>
-      <button class="tbtn ghost" id="clear-samples-btn">✕ Clear all placeholders</button>
-    </div>
   </div>
 
   <div class="overview-label">Overview by status</div>
   <div class="stats" id="stats"></div>
-  <div class="overview-label">Overview by category</div>
-  <div class="stats stats-cats" id="stats-categories"></div>
+  <button class="cat-overview-toggle" id="cat-overview-toggle">▾ Show category breakdown</button>
+  <div class="stats stats-cats" id="stats-categories" style="display:none;margin-top:8px;"></div>
 
   <div class="tabs">
     <div class="tab active" data-tab="all">All matters</div>
@@ -215,13 +220,15 @@
 
   <div class="panel active" id="panel-all">
     <div class="panel-intro">Every matter, referenced by case number only. Domestic abuse and section 8 orders sit under private law; care proceedings sits under public law; transfer of tenancy, financials and divorce are matrimonial/financial matters that often run alongside each other. Group by whichever lens is useful — a matter with more than one category appears in every relevant section. Click a category pill to add or remove it from a matter.</div>
+
+    <div class="overview-label">Actions</div>
     <div class="controls">
       <button class="tbtn" id="add-matter-toggle">+ Add matter</button>
       <button class="export-btn" id="am-export">⎙ Export shown rows as PDF</button>
     </div>
 
     <div id="add-matter-form" style="display:none;background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:16px 18px;margin-bottom:1.25rem;box-shadow:0 2px 8px rgba(24,40,66,0.08);">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);margin-bottom:10px;">New matter — month first, then whatever else you have to hand</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);margin-bottom:10px;">New matter — defaults to the current month; stays open so you can log several in a row</div>
       <div class="controls" style="margin-bottom:2px;">
         <select id="nm-month"></select>
         <input type="text" id="nm-clientref" placeholder="Client name (optional)">
@@ -237,10 +244,11 @@
       <input type="text" id="nm-detail" placeholder="Next action / details (optional)" class="edit-text" style="margin-bottom:10px;">
       <div>
         <button class="tbtn" id="nm-submit">Add matter</button>
-        <button class="tbtn ghost" id="nm-cancel">Cancel</button>
+        <button class="tbtn ghost" id="nm-cancel">Close</button>
       </div>
     </div>
 
+    <div class="overview-label">Filter &amp; group</div>
     <div class="controls">
       <input type="text" id="am-search" placeholder="Search case number or client name…">
       <select id="am-groupby">
@@ -256,7 +264,17 @@
       <select id="am-lawarea"><option value="">All law areas</option></select>
       <select id="am-status"><option value="">All statuses</option></select>
     </div>
-    <div class="count" id="am-count"></div>
+
+    <div class="selection-bar" id="selection-bar" style="display:none;">
+      <span id="selection-count"></span>
+      <button class="tbtn" id="bulk-delete-btn">Delete selected</button>
+      <button class="tbtn ghost" id="clear-selection-btn">Clear selection</button>
+    </div>
+
+    <div class="count-row">
+      <label class="select-all-label"><input type="checkbox" id="am-select-all"> Select all shown</label>
+      <div class="count" id="am-count"></div>
+    </div>
     <div id="am-groups"></div>
   </div>
 
@@ -307,12 +325,12 @@
       <p>This is a single HTML file with the docket data written into it. It doesn't need installing, doesn't need an internet connection, and doesn't talk to Clio or anyone else's computer. Opening it means double-clicking the file.</p>
 
       <div class="tagline">This copy</div>
-      <h3>The original docket, restored</h3>
-      <p>This version carries the full de-identified working docket — 102 matters, case numbers as they were originally assigned from the Clio export (cases 100–102 are three that existed in the old ongoing tracker with no matching intake record, carried over as their own entries). Every matter can still be edited or removed individually, or cleared in bulk from the "Sample data" toolbar group if you'd rather start from empty and build up via <strong>Add matter</strong> or <strong>Import matters from CSV</strong>.</p>
+      <h3>Starts empty — nothing is pre-filled</h3>
+      <p>This version ships with no matters at all. Nothing appears until you either add one yourself (<strong>+ Add matter</strong>, month first), bring a batch in with <strong>Import from CSV</strong>, or restore a previous backup that has real data in it. That's deliberate — no placeholder or sample data to mistake for real casework, and nothing to clear out before you start using it properly.</p>
 
       <div class="tagline">Client names</div>
-      <h3>The sample data has none — the "Client name" field is optional and entirely up to you</h3>
-      <p>Out of the box, this file has no real client names anywhere — every sample matter's client name field is blank. If you fill names in locally, they're saved the same way every other edit is: to this browser, tied to this exact file, never sent anywhere. That also means the moment you'd consider sharing, backing up to a wider location, or hosting this file anywhere more visible than Dillex's own secure storage, treat it as containing real client data and handle it accordingly.</p>
+      <h3>The "Client name" field is optional and entirely up to you</h3>
+      <p>There's no default data of any kind in this file, so there's nothing to worry about out of the box. If you fill names in locally, they're saved the same way every other edit is: to this browser, tied to this exact file, never sent anywhere. That also means the moment you'd consider sharing, backing up to a wider location, or hosting this file anywhere more visible than Dillex's own secure storage, treat it as containing real client data and handle it accordingly.</p>
 
       <div class="tagline">Storing and backing it up</div>
       <h3>Treat it exactly like a Word or Excel file</h3>
@@ -386,110 +404,9 @@ const CAT_CLASS = {
 };
 
 // [no, month, source, categories(;-separated), status, legalAid, detail]
-// De-identified, restored to the fuller original docket (102 matters, case numbers as originally assigned).
+// No matters ship by default — this starts empty. Matters appear only once you add one,
+// import a CSV, or restore a backup that contains data.
 const MATTERS_RAW = [
-["001","PRE-MAY","NCDV","","Active","Unknown",""],
-["002","PRE-MAY","DAA","","Active","Unknown",""],
-["003","PRE-MAY","NCDV","","Active","Unknown",""],
-["004","PRE-MAY","NCDV","","Active","Unknown",""],
-["005","PRE-MAY","DAA","","Active","Unknown",""],
-["006","PRE-MAY","DAA","","Active","Unknown",""],
-["007","PRE-MAY","DAA","Section 8 orders","Active","Unknown","Forced marriage, CAO, PSO — amended LAA"],
-["008","PRE-MAY","DAA","","Active","Unknown",""],
-["009","PRE-MAY","DAA","","Active","Unknown",""],
-["010","PRE-MAY","NCDV","","Active","Unknown",""],
-["011","PRE-MAY","NCDV","","Active","Unknown",""],
-["012","PRE-MAY","CourtNav","","Active","Unknown",""],
-["013","PRE-MAY","NCDV","","Active","Unknown",""],
-["014","PRE-MAY","DAA","","Active","Unknown",""],
-["015","PRE-MAY","CourtNav","","Active","Unknown",""],
-["016","PRE-MAY","DAA","","Active","Unknown",""],
-["017","PRE-MAY","DAA","Transfer of tenancy","Active","Unknown","TOT 15 Jun — R statement — barrister booked"],
-["018","PRE-MAY","DAA","Domestic abuse;Section 8 orders;Financials","Active","Unknown","Finance — 23 Jul — barrister booked"],
-["019","PRE-MAY","DAA","Domestic abuse","Active","Unknown",""],
-["020","PRE-MAY","DAA","Domestic abuse","Not proceeding","Unknown",""],
-["021","PRE-MAY","DAA","Domestic abuse","Active","Unknown",""],
-["022","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
-["023","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
-["024","PRE-MAY","NCDV","Domestic abuse","Not proceeding","Unknown",""],
-["025","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
-["026","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
-["027","PRE-MAY","NCDV","Domestic abuse","Not proceeding","Unknown",""],
-["028","PRE-MAY","NCDV","","Active","Unknown",""],
-["029","PRE-MAY","NCDV","","Not proceeding","Unknown",""],
-["030","PRE-MAY","CourtNav","","Not proceeding","Unknown",""],
-["031","PRE-MAY","NCDV","","Active","Unknown",""],
-["032","PRE-MAY","NCDV","","Active","Unknown",""],
-["033","PRE-MAY","CourtNav","Domestic abuse","Active","Unknown",""],
-["034","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
-["035","PRE-MAY","NCDV","","Active","Unknown",""],
-["036","PRE-MAY","NCDV","Domestic abuse","Not proceeding","Unknown",""],
-["037","PRE-MAY","DAA","Domestic abuse","Active","Unknown",""],
-["038","PRE-MAY","DAA","Domestic abuse","Active","Unknown",""],
-["039","PRE-MAY","DAA","Domestic abuse;Section 8 orders","Active","Unknown","CAO — next hearing 10 Jun — counsel booked"],
-["040","PRE-MAY","DAA","Domestic abuse","Active","Unknown",""],
-["041","PRE-MAY","DAA","Domestic abuse;Section 8 orders","Active","Unknown",""],
-["042","PRE-MAY","DAA","","Active","Unknown",""],
-["043","PRE-MAY","DAA","Domestic abuse","Active","Unknown",""],
-["044","PRE-MAY","DAA","Domestic abuse","Not proceeding","Unknown",""],
-["045","PRE-MAY","DAA","Domestic abuse","Not proceeding","Unknown",""],
-["046","PRE-MAY","DAA","Domestic abuse","Active","Unknown",""],
-["047","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
-["048","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
-["049","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
-["050","PRE-MAY","NCDV","Domestic abuse","Active","Unknown","Listed 28 Apr"],
-["051","PRE-MAY","NCDV","Domestic abuse","Active","Unknown","Chasing NOH"],
-["052","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
-["053","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
-["054","PRE-MAY","NCDV","Domestic abuse","Active","Unknown",""],
-["055","PRE-MAY","CourtNav","Domestic abuse","Active","Unknown",""],
-["056","PRE-MAY","DAA","","Active","Unknown",""],
-["057","PRE-MAY","NCDV","","Active","Unknown",""],
-["058","PRE-MAY","CourtNav","Domestic abuse","Active","Unknown",""],
-["059","PRE-MAY","CourtNav","Domestic abuse","Active","Unknown",""],
-["060","PRE-MAY","DAA","","Active","Unknown",""],
-["061","PRE-MAY","DAA","","Active","Unknown",""],
-["062","PRE-MAY","DAA","","Active","Unknown",""],
-["063","PRE-MAY","DAA","","Active","Unknown",""],
-["064","PRE-MAY","DAA","","Active","Unknown",""],
-["065","PRE-MAY","DAA","","Active","Unknown",""],
-["066","PRE-MAY","DAA","","Active","Unknown",""],
-["067","PRE-MAY","DAA","","Active","Unknown","Amend witness statement"],
-["068","PRE-MAY","DAA","","Active","Unknown",""],
-["069","PRE-MAY","DAA","","Active","Unknown",""],
-["070","PRE-MAY","DAA","","Active","Unknown",""],
-["071","PRE-MAY","DAA","","Active","Unknown",""],
-["072","MAY","Referral","","Active","Unknown",""],
-["073","MAY","Referral","","Active","Unknown",""],
-["074","MAY","Referral","","Active","Unknown",""],
-["075","MAY","Referral","","Active","Unknown",""],
-["076","MAY","NCDV","","Active","Unknown",""],
-["077","MAY","DAA","Care proceedings","Active","Unknown","Care matter"],
-["078","MAY","DAA","","Active","Unknown",""],
-["079","JUNE","DAA","Domestic abuse","Active","Unknown",""],
-["080","JUNE","DAA","Domestic abuse","Active","Unknown",""],
-["081","JUNE","DAA","","Active","Unknown",""],
-["082","JUNE","DAA","Domestic abuse","Active","Unknown",""],
-["083","JUNE","NCDV","Domestic abuse","Active","Unknown",""],
-["084","JUNE","DAA","","Active","Unknown",""],
-["085","JUNE","DAA","","Active","Unknown",""],
-["086","JULY","Referral","","Active","Applied",""],
-["087","JULY","NCDV","","Active","Applied","Court date 31 Jul"],
-["088","JULY","Referral","","Active","Applied",""],
-["089","JULY","Referral","","Active","Applied",""],
-["090","JULY","Referral","","Active","Applied",""],
-["091","JULY","Referral","","Active","Applied",""],
-["092","JULY","Referral","","Active","Applied","Court date 5 Aug"],
-["093","JULY","NCDV","","Active","Not applied",""],
-["094","JULY","NCDV","","Active","Unknown",""],
-["095","JULY","NCDV","","Active","Applied",""],
-["096","JULY","Referral","","Active","Applied",""],
-["097","JULY","Referral","","Active","Applied",""],
-["098","JULY","Referral","","Closed","N/A - private client","Instructed CSS Law — another firm"],
-["099","JULY","CourtNav","","Active","Unknown",""],
-["100","PRE-MAY","Unspecified","","Active","Unknown","Amend LAA — vary order (not on intake list)"],
-["101","PRE-MAY","Unspecified","Section 8 orders","Active","Unknown","CAO (not on intake list)"],
-["102","PRE-MAY","Unspecified","","Active","Unknown","Listed 21 May (not on intake list)"],
 ];
 
 let storageOK = true;
@@ -652,6 +569,7 @@ function buildMatters(){
 }
 
 let MATTERS = buildMatters();
+let selectedMatterIds = new Set();
 
 function rebuildData(){
   MATTERS = buildMatters();
@@ -738,16 +656,26 @@ function categoryReadonly(cats){
   return cats.map(c=>`<span class="cat-pill-ro" style="background:var(--grey-bg);color:var(--ink-soft);">${c}</span>`).join('');
 }
 
+function debounce(fn, delay){
+  let t;
+  return function(...args){
+    clearTimeout(t);
+    t = setTimeout(()=>fn.apply(this,args), delay);
+  };
+}
+function attachAutosave(inp, onSave){
+  const debounced = debounce(onSave, 500);
+  inp.addEventListener('input', debounced);
+  inp.addEventListener('blur', onSave);
+}
+
 function detailInput(m){
   const inp = document.createElement('input');
   inp.type = 'text';
   inp.className = 'edit-text';
   inp.value = m.detail;
   inp.placeholder = 'Next action / details…';
-  inp.addEventListener('change', ()=>{
-    m.detail = inp.value;
-    setOverride('detail', m.id, m.detail);
-  });
+  attachAutosave(inp, ()=>{ m.detail = inp.value; setOverride('detail', m.id, m.detail); });
   return inp;
 }
 
@@ -758,10 +686,7 @@ function clientRefInput(m){
   inp.value = m.clientRef;
   inp.placeholder = 'optional';
   inp.style.minWidth = '90px';
-  inp.addEventListener('change', ()=>{
-    m.clientRef = inp.value;
-    setOverride('clientref', m.id, m.clientRef);
-  });
+  attachAutosave(inp, ()=>{ m.clientRef = inp.value; setOverride('clientref', m.id, m.clientRef); });
   return inp;
 }
 
@@ -771,10 +696,7 @@ function outcomeInput(m){
   inp.className = 'edit-text';
   inp.value = m.outcome;
   inp.placeholder = 'Record outcome…';
-  inp.addEventListener('change', ()=>{
-    m.outcome = inp.value;
-    setOverride('outcome', m.id, m.outcome);
-  });
+  attachAutosave(inp, ()=>{ m.outcome = inp.value; setOverride('outcome', m.id, m.outcome); });
   return inp;
 }
 
@@ -784,12 +706,9 @@ function deleteBtn(m){
   btn.title = 'Remove this matter';
   btn.textContent = '✕';
   btn.addEventListener('click', ()=>{
-    const message = m.sample
-      ? 'Remove case '+m.no+'? It\'s one of the sample placeholder matters — you can always add real matters in its place.'
-      : 'Remove case '+m.no+'? This can\'t be undone.';
     showConfirmModal(
       'Remove matter',
-      message,
+      'Remove case '+m.no+'? This can\'t be undone.',
       ()=>{
         if(m.custom){
           const arr = getCustomRaw().filter(o=>o.id!==m.id);
@@ -811,15 +730,24 @@ function deleteBtn(m){
 function noteRowHtml(id, colspan){
   const val = getOverride('note', id) || '';
   return `<tr class="note-row" id="note-${id}" style="display:none;"><td colspan="${colspan}">
-    <textarea id="ta-${id}" placeholder="Add a working note for this matter...">${val}</textarea>
-    <div style="margin-top:6px;"><button class="note-btn" onclick="saveNote('${id}')">Save note</button></div>
+    <textarea id="ta-${id}" placeholder="Add a working note for this matter..." oninput="scheduleNoteSave('${id}')" onblur="saveNote('${id}')">${val}</textarea>
+    <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
+      <button class="note-btn" onclick="saveNote('${id}')">Save now</button>
+      <span style="font-size:10.5px;color:var(--slate);font-style:italic;">saves automatically as you type</span>
+    </div>
   </td></tr>`;
 }
+const noteSaveTimers = {};
+window.scheduleNoteSave = function(id){
+  clearTimeout(noteSaveTimers[id]);
+  noteSaveTimers[id] = setTimeout(()=>window.saveNote(id), 500);
+};
 window.saveNote = function(id){
-  const val = document.getElementById('ta-'+id).value;
-  setOverride('note', id, val);
+  const ta = document.getElementById('ta-'+id);
+  if(!ta) return;
+  setOverride('note', id, ta.value);
   const btn = document.querySelector(`#note-${id} .note-btn`);
-  if(btn){ const old = btn.textContent; btn.textContent = storageOK ? 'Saved' : 'Not saved'; setTimeout(()=>btn.textContent=old, 1300); }
+  if(btn){ const old = btn.textContent; btn.textContent = storageOK ? 'Saved ✓' : 'Not saved'; setTimeout(()=>{ if(btn) btn.textContent = old; }, 1300); }
 };
 window.toggleNote = function(id){
   const row = document.getElementById('note-'+id);
@@ -861,6 +789,60 @@ function renderAll(){
 function matterLawAreas(m){
   return [...new Set(m.categories.map(c=>CATEGORY_LAW_AREA[c]).filter(Boolean))];
 }
+// ---------- Multi-select ----------
+function updateSelectionBar(){
+  // drop selections for matters that no longer exist
+  const validIds = new Set(MATTERS.map(m=>m.id));
+  selectedMatterIds.forEach(id=>{ if(!validIds.has(id)) selectedMatterIds.delete(id); });
+
+  const bar = document.getElementById('selection-bar');
+  const n = selectedMatterIds.size;
+  bar.style.display = n>0 ? 'flex' : 'none';
+  if(n>0) document.getElementById('selection-count').textContent = n + ' selected';
+
+  const shownIds = filterAllMatters().map(m=>m.id);
+  const allShownSelected = shownIds.length>0 && shownIds.every(id=>selectedMatterIds.has(id));
+  const selectAll = document.getElementById('am-select-all');
+  selectAll.checked = allShownSelected;
+  selectAll.disabled = shownIds.length===0;
+}
+
+document.getElementById('am-select-all').addEventListener('change', (e)=>{
+  const shownIds = filterAllMatters().map(m=>m.id);
+  if(e.target.checked){ shownIds.forEach(id=>selectedMatterIds.add(id)); }
+  else{ shownIds.forEach(id=>selectedMatterIds.delete(id)); }
+  renderAllMatters();
+});
+
+document.getElementById('clear-selection-btn').addEventListener('click', ()=>{
+  selectedMatterIds.clear();
+  renderAllMatters();
+});
+
+document.getElementById('bulk-delete-btn').addEventListener('click', ()=>{
+  const ids = [...selectedMatterIds];
+  if(ids.length===0) return;
+  showConfirmModal(
+    'Delete selected matters',
+    'Remove ' + ids.length + ' selected matter' + (ids.length===1?'':'s') + '? This can\'t be undone.',
+    ()=>{
+      const idSet = new Set(ids);
+      const customArr = getCustomRaw().filter(o=>!idSet.has(o.id));
+      saveCustomRaw(customArr);
+      ids.forEach(id=>{
+        ['source','cats','status','laa','detail','outcome','note','clientref','month','deleted'].forEach(f=>{
+          try{ localStorage.removeItem('dillex-'+f+'-'+id); }catch(e){}
+        });
+      });
+      selectedMatterIds.clear();
+      rebuildData();
+      renderAll();
+      showToast('Removed ' + ids.length + ' matter' + (ids.length===1?'':'s') + '.', 'success');
+    },
+    'Delete selected'
+  );
+});
+
 function filterAllMatters(){
   const q = document.getElementById('am-search').value.trim().toLowerCase();
   const month = document.getElementById('am-month').value;
@@ -882,6 +864,7 @@ function filterAllMatters(){
 function matterRow(m, colCount){
   const tr = document.createElement('tr');
   tr.innerHTML = `
+    <td class="sel-cell"></td>
     <td class="no">${m.no}${m.custom?'<span class="custom-tag">imported</span>':''}</td>
     <td></td>
     <td class="month-tag">${MONTH_LABEL[m.month]||m.month}</td>
@@ -889,15 +872,24 @@ function matterRow(m, colCount){
     <td></td>
     <td></td>
     <td></td>`;
-  const refTd = tr.children[1];
+  const selTd = tr.children[0];
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.checked = selectedMatterIds.has(m.id);
+  cb.addEventListener('change', ()=>{
+    if(cb.checked) selectedMatterIds.add(m.id); else selectedMatterIds.delete(m.id);
+    updateSelectionBar();
+  });
+  selTd.appendChild(cb);
+  const refTd = tr.children[2];
   refTd.appendChild(clientRefInput(m));
-  const srcTd = tr.children[3];
+  const srcTd = tr.children[4];
   srcTd.appendChild(optionList(SOURCES, m.source, v=>{ m.source=v; setOverride('source',m.id,v); renderAll(); }));
-  const catTd = tr.children[4];
+  const catTd = tr.children[5];
   catTd.appendChild(categoryEditor(m));
-  const statTd = tr.children[5];
+  const statTd = tr.children[6];
   statTd.appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
-  const actionTd = tr.children[6];
+  const actionTd = tr.children[7];
   actionTd.innerHTML = `<button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button>`;
   actionTd.appendChild(deleteBtn(m));
   return tr;
@@ -905,11 +897,11 @@ function matterRow(m, colCount){
 
 function buildMatterTable(rows){
   const table = document.createElement('table');
-  table.innerHTML = `<thead><tr><th>No.</th><th>Client name</th><th>Month</th><th>Source</th><th>Category</th><th>Status</th><th></th></tr></thead><tbody></tbody>`;
+  table.innerHTML = `<thead><tr><th></th><th>No.</th><th>Client name</th><th>Month</th><th>Source</th><th>Category</th><th>Status</th><th></th></tr></thead><tbody></tbody>`;
   const tbody = table.querySelector('tbody');
   rows.forEach(m=>{
     tbody.appendChild(matterRow(m));
-    tbody.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 7));
+    tbody.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 8));
   });
   return table;
 }
@@ -921,13 +913,20 @@ function renderAllMatters(){
   const container = document.getElementById('am-groups');
   container.innerHTML = '';
 
+  if(MATTERS.length===0){
+    container.innerHTML = '<div class="empty-state"><div class="icon">◇</div>No matters yet.<div class="sub">Click "+ Add matter" above, import a CSV, or restore a backup to get started.</div></div>';
+    updateSelectionBar();
+    return;
+  }
   if(rows.length===0){
     container.innerHTML = '<div class="empty-state"><div class="icon">◇</div>No matters match this filter.<div class="sub">Try widening the month, source or category filter above.</div></div>';
+    updateSelectionBar();
     return;
   }
 
   if(groupBy==='none'){
     container.appendChild(buildMatterTable(rows));
+    updateSelectionBar();
     return;
   }
 
@@ -965,6 +964,7 @@ function renderAllMatters(){
     container.appendChild(header);
     container.appendChild(buildMatterTable(groupRows));
   });
+  updateSelectionBar();
 }
 
 // ---------- Ongoing ----------
@@ -1318,35 +1318,20 @@ document.getElementById('options-toggle').addEventListener('click', ()=>{
   }
 });
 
+document.getElementById('cat-overview-toggle').addEventListener('click', ()=>{
+  const el = document.getElementById('stats-categories');
+  const btn = document.getElementById('cat-overview-toggle');
+  const showing = el.style.display !== 'none';
+  el.style.display = showing ? 'none' : 'grid';
+  btn.textContent = showing ? '▾ Show category breakdown' : '▴ Hide category breakdown';
+  if(!showing){
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = 'panelFade .14s ease-out';
+  }
+});
+
 renderAll();
-
-// ---------- Restore removed sample placeholders ----------
-document.getElementById('restore-samples-btn').addEventListener('click', ()=>{
-  if(!storageOK){ showToast('Local storage is blocked in this browser.', 'warn'); return; }
-  const removedIds = MATTERS_RAW.map(r=>'m'+r[0]).filter(id=>getOverride('deleted', id)==='1');
-  if(removedIds.length===0){ showToast('No sample placeholders have been removed.', ''); return; }
-  removedIds.forEach(id=>{ try{ localStorage.removeItem('dillex-deleted-'+id); }catch(e){} });
-  rebuildData();
-  renderAll();
-  showToast('Restored '+removedIds.length+' sample matter'+(removedIds.length===1?'':'s')+'.', 'success');
-});
-
-document.getElementById('clear-samples-btn').addEventListener('click', ()=>{
-  if(!storageOK){ showToast('Local storage is blocked in this browser.', 'warn'); return; }
-  const remainingIds = MATTERS_RAW.map(r=>'m'+r[0]).filter(id=>getOverride('deleted', id)!=='1');
-  if(remainingIds.length===0){ showToast('No sample placeholders left to clear.', ''); return; }
-  showConfirmModal(
-    'Clear all sample placeholders',
-    'Remove all '+remainingIds.length+' remaining sample matter'+(remainingIds.length===1?'':'s')+'? Anything you\'ve added or imported yourself is untouched, and you can bring these back with "Restore removed placeholders" any time.',
-    ()=>{
-      remainingIds.forEach(id=>setOverride('deleted', id, '1'));
-      rebuildData();
-      renderAll();
-      showToast('Cleared '+remainingIds.length+' sample matter'+(remainingIds.length===1?'':'s')+'.', 'success');
-    },
-    'Clear all'
-  );
-});
 
 // ---------- Add new month (with roll-forward) ----------
 document.getElementById('add-month-btn').addEventListener('click', ()=>{
@@ -1401,7 +1386,8 @@ function renderNmCategoryPills(){
 }
 
 function resetNmForm(){
-  document.getElementById('nm-month').value = '';
+  const latestMonth = MONTHS[MONTHS.length-1];
+  document.getElementById('nm-month').value = latestMonth;
   document.getElementById('nm-clientref').value = '';
   document.getElementById('nm-source').value = SOURCES[0];
   document.getElementById('nm-status').value = 'Active';
@@ -1424,7 +1410,7 @@ document.getElementById('add-matter-toggle').addEventListener('click', ()=>{
     form.style.animation = 'none';
     void form.offsetWidth;
     form.style.animation = 'panelFade .16s ease-out';
-    document.getElementById('nm-month').focus();
+    document.getElementById('nm-clientref').focus();
   }
 });
 document.getElementById('nm-cancel').addEventListener('click', ()=>{
@@ -1452,8 +1438,12 @@ document.getElementById('nm-submit').addEventListener('click', ()=>{
   saveCustomRaw(existing.concat([record]));
   rebuildData();
   renderAll();
-  document.getElementById('add-matter-form').style.display = 'none';
+  // Form stays open, pre-filled with the same month, so several matters
+  // can be logged one after another without reopening it each time.
+  const keptMonth = month;
   resetNmForm();
+  document.getElementById('nm-month').value = keptMonth;
+  document.getElementById('nm-clientref').focus();
   showToast('Case '+caseNo+' added to All matters.', 'success');
 });
 
