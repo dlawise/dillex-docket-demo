@@ -38,7 +38,7 @@
   .overview-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-bottom:6px;}
   .cat-overview-toggle{background:none;border:none;color:var(--ochre);font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;padding:2px 0;margin-bottom:1.5rem;}
   .cat-overview-toggle:hover{text-decoration:underline;}
-  .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin-bottom:1.25rem;}
+  .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin-bottom:1.25rem;}
   .stats.stats-cats{grid-template-columns:repeat(6,1fr);margin-bottom:2rem;}
   .stat{background:var(--paper);padding:12px 14px;transition:background-color .15s ease;}
   .stat:hover{background:#FBFAF7;}
@@ -74,6 +74,8 @@
   tbody tr:hover{background:var(--grey-bg);}
   tbody tr.laa-flag{background:var(--ochre-bg);}
   tbody tr.laa-flag:hover{background:#efe0bd;}
+  tbody tr.overdue-row{background:var(--burgundy-bg);}
+  tbody tr.overdue-row:hover{background:#ecd6d3;}
   .no{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-size:12.5px;font-weight:500;}
   .custom-tag{font-size:9px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.04em;color:var(--forest);background:var(--forest-bg);padding:1px 5px;border-radius:8px;margin-left:5px;}
   .del-btn{background:none;border:none;color:var(--burgundy);cursor:pointer;font-size:13px;padding:0 4px;}
@@ -100,6 +102,20 @@
   .flag-note{font-size:10.5px;color:var(--burgundy);font-style:italic;margin-top:3px;}
   .note-row{background:var(--grey-bg);}
   .note-row textarea{width:100%;min-height:44px;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;padding:6px 8px;border:1px solid var(--rule);border-radius:2px;resize:vertical;}
+  .note-block{padding-bottom:12px;margin-bottom:12px;border-bottom:1px dashed var(--rule);}
+  .hearing-block-title{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);margin-bottom:6px;}
+  .log-empty{font-size:11.5px;color:var(--slate);padding:4px 0 8px;}
+  .log-entry{display:flex;gap:10px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--rule);font-size:12px;}
+  .log-entry .log-date{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);min-width:82px;flex-shrink:0;}
+  .log-entry .log-event{font-weight:500;min-width:130px;flex-shrink:0;}
+  .log-entry .log-outcome{color:var(--ink-soft);flex:1;}
+  .log-add-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center;}
+  .log-add-row input{min-width:120px;}
+  .log-quickpicks{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .log-quickpicks .cat-pill{cursor:pointer;}
+  .log-entry.overdue{background:var(--burgundy-bg);margin:0 -8px;padding:5px 8px;border-radius:2px;}
+  .dir-party{font-weight:400;color:var(--slate);font-size:11px;}
+  .dir-toggle{padding:3px 9px !important;font-size:10px !important;white-space:nowrap;}
   .note-btn{font-family:'IBM Plex Mono',monospace;font-size:10.5px;background:none;border:1px solid var(--rule);padding:3px 8px;cursor:pointer;color:var(--ink-soft);border-radius:2px;}
   .note-btn:hover{border-color:var(--ink);color:var(--ink);}
   .expand-btn{background:none;border:none;cursor:pointer;color:var(--slate);font-size:11px;font-family:'IBM Plex Mono',monospace;padding:0;white-space:nowrap;}
@@ -279,14 +295,15 @@
   </div>
 
   <div class="panel" id="panel-ongoing">
-    <div class="panel-intro">Live matters currently being worked (status: active). Update legal aid position and next action as things move; change the status to shift a matter onto Finished/concluded or Closed.</div>
+    <div class="panel-intro">Live matters currently being worked (status: active). Set a next hearing date or add court directives (via "+ note") to keep this page sorted by what's coming up soonest — matters without either sit at the bottom. Overdue directives are flagged in red.</div>
     <div class="controls">
       <select id="o-month"><option value="">All months</option></select>
+      <label class="select-all-label" style="cursor:pointer;"><input type="checkbox" id="o-sort-hearing" checked> Sort by nearest date (hearing or directive)</label>
       <button class="export-btn" id="o-export">⎙ Export shown rows as PDF</button>
     </div>
     <div class="count" id="o-count"></div>
     <table>
-      <thead><tr><th>No.</th><th>Client name</th><th>Month</th><th>Legal aid</th><th>Status</th><th>Next action / details</th><th></th></tr></thead>
+      <thead><tr><th>No.</th><th>Client name</th><th>Month</th><th>Next hearing</th><th>Next directive</th><th>Legal aid</th><th>Status</th><th>Next action / details</th><th></th></tr></thead>
       <tbody id="o-body"></tbody>
     </table>
   </div>
@@ -348,6 +365,10 @@
       <p><strong>+ Add new month</strong> extends the docket beyond the built-in Pre-May–July run. When you add one, any matter still sitting in the previous month that isn't finished/concluded or closed automatically moves forward into the new month, so nothing open quietly falls out of view. It suggests the next calendar month automatically, but you can type any label you want.</p>
       <p>Each of the four matter pages can export its currently filtered rows to PDF via the browser's own print dialog (choose "Save as PDF") — this works offline, without any external service.</p>
 
+      <div class="tagline">Tracking hearings and directives</div>
+      <h3>Next hearing and next directive, sorted automatically; full history kept alongside</h3>
+      <p>On <strong>Ongoing matters</strong>, each matter has a <strong>Next hearing</strong> date field and shows its <strong>Next directive</strong> due date, and the page sorts by whichever of the two is nearer — anything without either sits at the bottom. Rows are highlighted amber if a hearing is due today or has passed, and red if a directive is overdue. Untick "Sort by nearest date" if you'd rather see the plain list.</p>
+      <p>Click <strong>+ note</strong> on any matter, on any page, to open its <strong>hearing / progress log</strong> and <strong>court directives</strong> alongside the notes box. The hearing log is a running history of what's happened (date, event, outcome), newest first. Directives are due-dated tasks — file a statement, disclose documents, and so on — each with an Outstanding/Complied toggle; overdue ones are shown in red. Both stay attached to the matter even after it moves to Finished/concluded or Closed, so the full history and compliance record are still there later. The overview at the top of the page includes a running count of overdue directives across the whole caseload.</p>
       <div class="tagline">Given the subject matter</div>
       <h3>Handle the file the way you'd handle any case list</h3>
       <ul>
@@ -546,6 +567,9 @@ function buildMatters(){
         legalAid: getOverride('laa',id) || r[5],
         detail: getOverride('detail',id) !== null ? getOverride('detail',id) : r[6],
         outcome: getOverride('outcome',id) || '',
+        nextHearing: getOverride('nexthearing',id) || '',
+        hearingLog: (()=>{ try{ return JSON.parse(getOverride('log',id) || '[]'); }catch(e){ return []; } })(),
+        directives: (()=>{ try{ return JSON.parse(getOverride('directives',id) || '[]'); }catch(e){ return []; } })(),
         custom:false, sample:true
       };
     });
@@ -562,6 +586,9 @@ function buildMatters(){
       legalAid: getOverride('laa',id) || o.legalAid,
       detail: getOverride('detail',id) !== null ? getOverride('detail',id) : (o.detail||''),
       outcome: getOverride('outcome',id) || '',
+      nextHearing: getOverride('nexthearing',id) || o.nextHearing || '',
+      hearingLog: (()=>{ try{ return JSON.parse(getOverride('log',id) || '[]'); }catch(e){ return []; } })(),
+      directives: (()=>{ try{ return JSON.parse(getOverride('directives',id) || '[]'); }catch(e){ return []; } })(),
       custom:true, sample:false
     };
   });
@@ -730,10 +757,35 @@ function deleteBtn(m){
 function noteRowHtml(id, colspan){
   const val = getOverride('note', id) || '';
   return `<tr class="note-row" id="note-${id}" style="display:none;"><td colspan="${colspan}">
-    <textarea id="ta-${id}" placeholder="Add a working note for this matter..." oninput="scheduleNoteSave('${id}')" onblur="saveNote('${id}')">${val}</textarea>
-    <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
-      <button class="note-btn" onclick="saveNote('${id}')">Save now</button>
-      <span style="font-size:10.5px;color:var(--slate);font-style:italic;">saves automatically as you type</span>
+    <div class="note-block">
+      <textarea id="ta-${id}" placeholder="Add a working note for this matter..." oninput="scheduleNoteSave('${id}')" onblur="saveNote('${id}')">${val}</textarea>
+      <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
+        <button class="note-btn" onclick="saveNote('${id}')">Save now</button>
+        <span style="font-size:10.5px;color:var(--slate);font-style:italic;">saves automatically as you type</span>
+      </div>
+    </div>
+    <div class="hearing-block">
+      <div class="hearing-block-title">Hearing / progress log</div>
+      <div id="log-list-${id}"></div>
+      <div class="log-add-row">
+        <input type="date" id="log-date-${id}" class="edit-text">
+        <input type="text" id="log-event-${id}" class="edit-text" placeholder="Event (e.g. First hearing)">
+        <input type="text" id="log-outcome-${id}" class="edit-text" placeholder="Outcome">
+        <button class="tbtn ghost" onclick="addLogEntry('${id}')">+ Add entry</button>
+      </div>
+      <div class="log-quickpicks">
+        ${['Adjourned','Order made','Order refused','Withdrawn','Directions given'].map(o=>`<button type="button" class="cat-pill" onclick="setLogOutcome('${id}','${o}')">${o}</button>`).join('')}
+      </div>
+    </div>
+    <div class="hearing-block">
+      <div class="hearing-block-title">Court directives</div>
+      <div id="dir-list-${id}"></div>
+      <div class="log-add-row">
+        <input type="date" id="dir-date-${id}" class="edit-text">
+        <input type="text" id="dir-desc-${id}" class="edit-text" placeholder="Directive (e.g. File statement in reply)">
+        <input type="text" id="dir-party-${id}" class="edit-text" placeholder="Party (optional)">
+        <button class="tbtn ghost" onclick="addDirective('${id}')">+ Add directive</button>
+      </div>
     </div>
   </td></tr>`;
 }
@@ -751,7 +803,151 @@ window.saveNote = function(id){
 };
 window.toggleNote = function(id){
   const row = document.getElementById('note-'+id);
-  if(row) row.style.display = row.style.display==='none' ? 'table-row' : 'none';
+  if(!row) return;
+  const opening = row.style.display === 'none';
+  row.style.display = opening ? 'table-row' : 'none';
+  if(opening){
+    const m = MATTERS.find(x=>x.id===id);
+    if(m){ renderHearingLog(m); renderDirectives(m); }
+  }
+};
+
+function formatLogDate(d){
+  if(!d) return '';
+  const parts = d.split('-');
+  if(parts.length!==3) return d;
+  const dt = new Date(+parts[0], +parts[1]-1, +parts[2]);
+  if(isNaN(dt.getTime())) return d;
+  return dt.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+}
+
+function renderHearingLog(m){
+  const container = document.getElementById('log-list-'+m.id);
+  if(!container) return;
+  if(!m.hearingLog || m.hearingLog.length===0){
+    container.innerHTML = '<div class="log-empty">No hearings logged yet.</div>';
+    return;
+  }
+  const sorted = m.hearingLog.map((e,i)=>Object.assign({}, e, {_idx:i})).sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+  container.innerHTML = sorted.map(e=>`
+    <div class="log-entry">
+      <span class="log-date">${e.date ? esc(formatLogDate(e.date)) : '—'}</span>
+      <span class="log-event">${esc(e.event||'')}</span>
+      <span class="log-outcome">${esc(e.outcome||'')}</span>
+      <button class="del-btn" onclick="deleteLogEntry('${m.id}', ${e._idx})" title="Remove entry">✕</button>
+    </div>`).join('');
+}
+
+window.setLogOutcome = function(id, val){
+  const inp = document.getElementById('log-outcome-'+id);
+  if(inp) inp.value = val;
+};
+
+window.addLogEntry = function(id){
+  const m = MATTERS.find(x=>x.id===id);
+  if(!m) return;
+  const dateEl = document.getElementById('log-date-'+id);
+  const eventEl = document.getElementById('log-event-'+id);
+  const outcomeEl = document.getElementById('log-outcome-'+id);
+  const date = dateEl.value;
+  const event = eventEl.value.trim();
+  const outcome = outcomeEl.value.trim();
+  if(!date && !event && !outcome){ showToast('Add a date, event or outcome first.', 'warn'); return; }
+  m.hearingLog = m.hearingLog || [];
+  m.hearingLog.push({date, event, outcome});
+  if(storageOK){ setOverride('log', id, JSON.stringify(m.hearingLog)); }
+  else{ showToast('Local storage is blocked in this browser, so this entry won\'t be saved.', 'warn'); }
+  dateEl.value = ''; eventEl.value = ''; outcomeEl.value = '';
+  renderHearingLog(m);
+};
+
+window.deleteLogEntry = function(id, idx){
+  const m = MATTERS.find(x=>x.id===id);
+  if(!m || !m.hearingLog) return;
+  m.hearingLog.splice(idx, 1);
+  setOverride('log', id, JSON.stringify(m.hearingLog));
+  renderHearingLog(m);
+};
+
+// ---------- Court directives ----------
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+function nextDirectiveDate(m){
+  if(!m.directives || m.directives.length===0) return '';
+  const outstanding = m.directives.filter(d=>d.status!=='Complied' && d.dueDate);
+  if(outstanding.length===0) return '';
+  return outstanding.map(d=>d.dueDate).sort()[0];
+}
+function isDirectiveOverdue(d){
+  return d.status!=='Complied' && d.dueDate && d.dueDate < todayStr();
+}
+function countOverdueDirectives(){
+  let n = 0;
+  MATTERS.forEach(m=>{
+    (m.directives||[]).forEach(d=>{ if(isDirectiveOverdue(d)) n++; });
+  });
+  return n;
+}
+
+function renderDirectives(m){
+  const container = document.getElementById('dir-list-'+m.id);
+  if(!container) return;
+  if(!m.directives || m.directives.length===0){
+    container.innerHTML = '<div class="log-empty">No directives logged yet.</div>';
+    return;
+  }
+  const sorted = m.directives.map((d,i)=>Object.assign({}, d, {_idx:i}))
+    .sort((a,b)=> (a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
+  container.innerHTML = sorted.map(d=>{
+    const overdue = isDirectiveOverdue(d);
+    const complied = d.status === 'Complied';
+    const statusClass = complied ? 'pill-done' : (overdue ? 'pill-notproc' : 'pill-watch');
+    const statusLabel = complied ? 'Complied' : (overdue ? 'Overdue' : 'Outstanding');
+    return `<div class="log-entry${overdue ? ' overdue' : ''}">
+      <span class="log-date">${d.dueDate ? esc(formatLogDate(d.dueDate)) : '—'}</span>
+      <span class="log-event">${esc(d.description||'')}${d.party ? ' <span class="dir-party">('+esc(d.party)+')</span>' : ''}</span>
+      <span class="pill ${statusClass}">${statusLabel}</span>
+      <button class="tbtn ghost dir-toggle" onclick="toggleDirectiveStatus('${m.id}', ${d._idx})">${complied ? 'Mark outstanding' : 'Mark complied'}</button>
+      <button class="del-btn" onclick="deleteDirective('${m.id}', ${d._idx})" title="Remove directive">✕</button>
+    </div>`;
+  }).join('');
+}
+
+window.addDirective = function(id){
+  const m = MATTERS.find(x=>x.id===id);
+  if(!m) return;
+  const descEl = document.getElementById('dir-desc-'+id);
+  const dateEl = document.getElementById('dir-date-'+id);
+  const partyEl = document.getElementById('dir-party-'+id);
+  const description = descEl.value.trim();
+  const dueDate = dateEl.value;
+  const party = partyEl.value.trim();
+  if(!description && !dueDate){ showToast('Add at least a description or a due date.', 'warn'); return; }
+  m.directives = m.directives || [];
+  m.directives.push({ description, dueDate, party, status:'Outstanding' });
+  if(storageOK){ setOverride('directives', id, JSON.stringify(m.directives)); }
+  else{ showToast('Local storage is blocked in this browser, so this directive won\'t be saved.', 'warn'); }
+  descEl.value = ''; dateEl.value = ''; partyEl.value = '';
+  renderDirectives(m);
+  renderStats();
+};
+
+window.toggleDirectiveStatus = function(id, idx){
+  const m = MATTERS.find(x=>x.id===id);
+  if(!m || !m.directives || !m.directives[idx]) return;
+  m.directives[idx].status = m.directives[idx].status==='Complied' ? 'Outstanding' : 'Complied';
+  setOverride('directives', id, JSON.stringify(m.directives));
+  renderDirectives(m);
+  renderStats();
+};
+
+window.deleteDirective = function(id, idx){
+  const m = MATTERS.find(x=>x.id===id);
+  if(!m || !m.directives) return;
+  m.directives.splice(idx, 1);
+  setOverride('directives', id, JSON.stringify(m.directives));
+  renderDirectives(m);
+  renderStats();
 };
 
 function renderStats(){
@@ -760,13 +956,15 @@ function renderStats(){
   const notProc = MATTERS.filter(m=>m.status==='Not proceeding').length;
   const finished = MATTERS.filter(m=>m.status==='Finished / concluded').length;
   const closedCount = MATTERS.filter(m=>m.status==='Closed' || (m.status==='Not proceeding' && hasLegalAid(m))).length;
+  const overdueDirectives = countOverdueDirectives();
   const el = document.getElementById('stats');
   const cells = [
     ['Total matters', total, ''],
     ['Ongoing (active)', active, ''],
     ['Not proceeding', notProc, 'flag'],
     ['Finished / concluded', finished, 'done'],
-    ['Closed (incl. LAA not-proceeding)', closedCount, 'closed']
+    ['Closed (incl. LAA not-proceeding)', closedCount, 'closed'],
+    ['Directives overdue', overdueDirectives, overdueDirectives>0 ? 'flag' : '']
   ];
   el.innerHTML = cells.map(c=>`<div class="stat ${c[2]}"><div class="n">${c[1]}</div><div class="l">${c[0]}</div></div>`).join('');
 
@@ -968,35 +1166,70 @@ function renderAllMatters(){
 }
 
 // ---------- Ongoing ----------
+function nearestDate(m){
+  const hd = m.nextHearing || '';
+  const dd = nextDirectiveDate(m) || '';
+  if(!hd) return dd;
+  if(!dd) return hd;
+  return hd < dd ? hd : dd;
+}
 function filterOngoing(){
   const month = document.getElementById('o-month').value;
-  return MATTERS.filter(m=>{
+  const rows = MATTERS.filter(m=>{
     if(m.status!=='Active') return false;
     if(month && m.month!==month) return false;
     return true;
   });
+  if(document.getElementById('o-sort-hearing').checked){
+    rows.sort((a,b)=>{
+      const da = nearestDate(a), db = nearestDate(b);
+      if(!da && !db) return 0;
+      if(!da) return 1;
+      if(!db) return -1;
+      return da.localeCompare(db);
+    });
+  }
+  return rows;
+}
+function nextHearingInput(m){
+  const inp = document.createElement('input');
+  inp.type = 'date';
+  inp.className = 'edit-text';
+  inp.value = m.nextHearing;
+  attachAutosave(inp, ()=>{ m.nextHearing = inp.value; setOverride('nexthearing', m.id, m.nextHearing); });
+  inp.addEventListener('change', renderOngoing);
+  return inp;
 }
 function renderOngoing(){
   const rows = filterOngoing();
   document.getElementById('o-count').textContent = rows.length + ' matter' + (rows.length===1?'':'s');
   const body = document.getElementById('o-body');
   body.innerHTML = '';
+  const today = todayStr();
   rows.forEach(m=>{
     const tr = document.createElement('tr');
+    const hearingSoon = m.nextHearing && m.nextHearing <= today;
+    const nextDir = nextDirectiveDate(m);
+    const directiveOverdue = nextDir && nextDir < today;
     tr.innerHTML = `<td class="no">${m.no}${m.custom?'<span class="custom-tag">imported</span>':''}</td>
       <td></td>
       <td class="month-tag">${MONTH_LABEL[m.month]||m.month}</td>
+      <td></td>
+      <td>${nextDir ? esc(formatLogDate(nextDir)) : '<span style="color:var(--slate)">—</span>'}</td>
       <td></td><td></td><td></td>
       <td><button class="expand-btn" onclick="toggleNote('${m.id}')">+ note</button></td>`;
     tr.children[1].appendChild(clientRefInput(m));
-    tr.children[3].appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
-    tr.children[4].appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
-    tr.children[5].appendChild(detailInput(m));
-    tr.children[6].appendChild(deleteBtn(m));
+    tr.children[3].appendChild(nextHearingInput(m));
+    if(directiveOverdue) tr.classList.add('overdue-row');
+    else if(hearingSoon) tr.classList.add('laa-flag');
+    tr.children[5].appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
+    tr.children[6].appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
+    tr.children[7].appendChild(detailInput(m));
+    tr.children[8].appendChild(deleteBtn(m));
     body.appendChild(tr);
-    body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 7));
+    body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 9));
   });
-  if(rows.length===0) body.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">◇</div>No ongoing matters match this filter.</div></td></tr>';
+  if(rows.length===0) body.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="icon">◇</div>No ongoing matters match this filter.</div></td></tr>';
 }
 
 // ---------- Finished / concluded ----------
@@ -1078,6 +1311,7 @@ document.querySelectorAll('.tab').forEach(t=>{
 
 ['am-search','am-groupby','am-month','am-source','am-category','am-lawarea','am-status'].forEach(id=>document.getElementById(id).addEventListener('input', renderAllMatters));
 document.getElementById('o-month').addEventListener('change', renderOngoing);
+document.getElementById('o-sort-hearing').addEventListener('change', renderOngoing);
 document.getElementById('f-month').addEventListener('change', renderFinished);
 document.getElementById('c-month').addEventListener('change', renderClosed);
 
@@ -1115,8 +1349,11 @@ document.getElementById('am-export').addEventListener('click', ()=>{
 });
 document.getElementById('o-export').addEventListener('click', ()=>{
   const rows = filterOngoing();
-  const cols = ['No.','Client name','Month','Legal aid','Status','Next action / details'];
-  const data = rows.map(m=>[m.no, m.clientRef, MONTH_LABEL[m.month]||m.month, m.legalAid, m.status, m.detail]);
+  const cols = ['No.','Client name','Month','Next hearing','Next directive','Legal aid','Status','Next action / details'];
+  const data = rows.map(m=>{
+    const nd = nextDirectiveDate(m);
+    return [m.no, m.clientRef, MONTH_LABEL[m.month]||m.month, m.nextHearing?formatLogDate(m.nextHearing):'—', nd?formatLogDate(nd):'—', m.legalAid, m.status, m.detail];
+  });
   printRows('Ongoing matters', monthLabel('o'), cols, data);
 });
 document.getElementById('f-export').addEventListener('click', ()=>{
@@ -1487,9 +1724,9 @@ function matchOrDefault(value, allowed, fallback){
 }
 
 document.getElementById('template-btn').addEventListener('click', ()=>{
-  const csv = 'Month,Client name,Source,Categories,Status,Legal aid,Reference\n'
-    + 'AUGUST,,NCDV,Domestic abuse,Active,Unknown,\n'
-    + 'AUGUST,,CourtNav,Section 8 orders;Financials,Active,Applied,\n';
+  const csv = 'Month,Client name,Source,Categories,Status,Legal aid,Next hearing,Reference\n'
+    + 'AUGUST,,NCDV,Domestic abuse,Active,Unknown,,\n'
+    + 'AUGUST,,CourtNav,Section 8 orders;Financials,Active,Applied,2026-09-15,\n';
   const blob = new Blob([csv], {type:'text/csv'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1525,10 +1762,12 @@ document.getElementById('import-file').addEventListener('change', (ev)=>{
       const categories = catsRaw ? catsRaw.split(';').map(c=>matchOrDefault(c.trim(), CATEGORIES, null)).filter(Boolean) : [];
       const status = matchOrDefault(pickField(row,['status']), STATUSES, 'Active');
       const legalAid = matchOrDefault(pickField(row,['legal aid','legalaid','laa']), LAAS, 'Unknown');
+      const nextHearingRaw = pickField(row,['next hearing','nexthearing','hearing date']);
+      const nextHearing = /^\d{4}-\d{2}-\d{2}$/.test(nextHearingRaw) ? nextHearingRaw : '';
       const ref = pickField(row,['reference','ref','no','case no']);
       const no = ref || String(nextNo++).padStart(3,'0');
       const id = 'mc'+Date.now()+'-'+idx;
-      added.push({ id, no, month, clientRef, source, categories, status, legalAid, detail:'' });
+      added.push({ id, no, month, clientRef, source, categories, status, legalAid, detail:'', nextHearing });
     });
 
     if(added.length===0){
