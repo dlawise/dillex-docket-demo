@@ -26,7 +26,12 @@
   .masthead .date{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink-soft);text-align:right;}
   .storage-note{font-size:11.5px;color:var(--ink-soft);background:var(--paper);border:1px solid var(--rule);padding:9px 12px;border-radius:2px;margin-bottom:1rem;line-height:1.5;}
   .storage-note.blocked{border-color:var(--burgundy);color:var(--burgundy);}
-  .anon-note{font-size:11.5px;color:var(--forest);background:var(--forest-bg);border:1px solid var(--forest);padding:9px 12px;border-radius:2px;margin-bottom:1.5rem;line-height:1.5;}
+  .fresh-copy-note{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--ochre-bg);border:1px solid var(--ochre);color:var(--ink);font-size:12.5px;padding:10px 14px;border-radius:3px;margin-bottom:1rem;}
+  .fresh-copy-note span{flex:1;min-width:220px;line-height:1.5;}
+  .info-bar{display:flex;align-items:flex-start;gap:12px;font-size:11.5px;color:var(--ink-soft);background:var(--paper);border:1px solid var(--rule);padding:8px 12px;border-radius:2px;margin-bottom:.85rem;line-height:1.55;}
+  .info-bar span{flex:1;}
+  .info-dismiss{background:none;border:none;color:var(--slate);cursor:pointer;font-size:13px;line-height:1;padding:2px;flex-shrink:0;}
+  .info-dismiss:hover{color:var(--ink);}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;}
   .toolbar-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   .toolbar-label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-right:2px;}
@@ -35,6 +40,8 @@
   .tbtn:hover{background:var(--ink);color:var(--paper);}
   .tbtn.ghost{border-color:var(--rule);color:var(--ink-soft);}
   .tbtn.ghost:hover{background:var(--grey-bg);color:var(--ink);border-color:var(--rule);}
+  .tbtn.danger{border-color:var(--burgundy);color:var(--burgundy);}
+  .tbtn.danger:hover{background:var(--burgundy);color:var(--paper);}
   .overview-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-bottom:6px;}
   .cat-overview-toggle{background:none;border:none;color:var(--ochre);font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;padding:2px 0;margin-bottom:1.5rem;}
   .cat-overview-toggle:hover{text-decoration:underline;}
@@ -78,6 +85,7 @@
   tbody tr.overdue-row:hover{background:#ecd6d3;}
   .no{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-size:12.5px;font-weight:500;}
   .custom-tag{font-size:9px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.04em;color:var(--forest);background:var(--forest-bg);padding:1px 5px;border-radius:8px;margin-left:5px;}
+  .custom-tag.migrated-tag{color:var(--plum);background:var(--plum-bg);}
   .del-btn{background:none;border:none;color:var(--burgundy);cursor:pointer;font-size:13px;padding:0 4px;}
   .del-btn:hover{font-weight:600;}
   .pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-family:'IBM Plex Mono',monospace;letter-spacing:.02em;white-space:nowrap;margin:1px 3px 1px 0;}
@@ -104,6 +112,7 @@
   .note-row textarea{width:100%;min-height:44px;font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;padding:6px 8px;border:1px solid var(--rule);border-radius:2px;resize:vertical;}
   .note-block{padding-bottom:12px;margin-bottom:12px;border-bottom:1px dashed var(--rule);}
   .hearing-block-title{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);margin-bottom:6px;}
+  .hearing-block + .hearing-block{margin-top:14px;padding-top:14px;border-top:1px dashed var(--rule);}
   .log-empty{font-size:11.5px;color:var(--slate);padding:4px 0 8px;}
   .log-entry{display:flex;gap:10px;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--rule);font-size:12px;}
   .log-entry .log-date{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);min-width:82px;flex-shrink:0;}
@@ -189,14 +198,21 @@
     <div>
       <div class="firm">Dillex Solicitors — family law</div>
       <h1>Case management docket</h1>
-      <div class="sub">Working copy, read from Clio Manage export</div>
+      <div class="sub">Working copy — logged as matters come in</div>
     </div>
-    <div class="date">Prepared 30 Jul 2026<br>Covers pre-May – Jul intake</div>
+    <div class="date">Reset for September 2026<br>Starts empty — no carried-over data</div>
   </div>
 
-  <div class="anon-note">De-identified — no client names anywhere in this file, including in the notes below. Every matter is referenced only by case number. Cross-reference against Clio using the case number if you need to identify who a matter belongs to.</div>
-
-  <div class="storage-note" id="storage-warning"></div>
+  <div class="info-bar" id="info-bar">
+    <span>De-identified — matters are referenced by case number only, and client names are optional. Every edit saves automatically to this browser, tied to this file. See "Using &amp; backing up this file" below for what that means if it's copied or shared.</span>
+    <button class="info-dismiss" id="info-dismiss-btn" title="Dismiss">✕</button>
+  </div>
+  <div class="storage-note blocked" id="storage-blocked-warning" style="display:none;"></div>
+  <div class="fresh-copy-note" id="fresh-copy-note" style="display:none;">
+    <span>This copy has no data in it yet. If you're upgrading from a previous version and have a backup, restore it now to bring your matters across.</span>
+    <button class="tbtn" id="fresh-restore-btn">⬆ Restore a backup</button>
+    <button class="tbtn ghost" id="fresh-dismiss-btn">Start fresh instead</button>
+  </div>
 
   <button class="tbtn ghost" id="options-toggle" style="margin-bottom:1rem;">⚙ Options &amp; tools</button>
 
@@ -218,6 +234,11 @@
       <button class="tbtn" id="import-btn">⬆ Import from CSV</button>
       <input type="file" id="import-file" accept=".csv,text/csv" style="display:none;">
       <button class="tbtn ghost" id="template-btn">⬇ CSV template</button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <span class="toolbar-label">Danger zone</span>
+      <button class="tbtn danger" id="hard-reset-btn">🗑 Clear all data in this browser</button>
     </div>
   </div>
 
@@ -342,8 +363,9 @@
       <p>This is a single HTML file with the docket data written into it. It doesn't need installing, doesn't need an internet connection, and doesn't talk to Clio or anyone else's computer. Opening it means double-clicking the file.</p>
 
       <div class="tagline">This copy</div>
-      <h3>Starts empty — nothing is pre-filled</h3>
-      <p>This version ships with no matters at all. Nothing appears until you either add one yourself (<strong>+ Add matter</strong>, month first), bring a batch in with <strong>Import from CSV</strong>, or restore a previous backup that has real data in it. That's deliberate — no placeholder or sample data to mistake for real casework, and nothing to clear out before you start using it properly.</p>
+      <h3>Reset for September — genuinely clean, not just visually empty</h3>
+      <p>This version starts from September, with no earlier months carried over, and fixes a labelling bug from the previous version where every matter — including ones added by hand — was incorrectly tagged "imported." Only matters actually brought in via CSV now show that tag; matters restored from an old-format backup show "migrated" instead, so it's clear where each one came from. Nothing appears until you add a matter, import a CSV, or restore a backup.</p>
+      <p>Treat this as a distinct file rather than overwriting an older copy of the dashboard at the same filename — a couple of browsers reuse local storage across files with the same name and location, which is the most likely explanation for numbering looking odd previously. Saving this under a new filename avoids that entirely.</p>
 
       <div class="tagline">Client names</div>
       <h3>The "Client name" field is optional and entirely up to you</h3>
@@ -362,7 +384,7 @@
       <p>Every dropdown, category pill, text field and note box saves to the browser's local storage, tied to this exact file in this exact folder on this exact computer. Edits won't appear if the file is copied elsewhere or opened by a colleague from their own copy — each copy keeps its own separate edits. Use <strong>Backup edits</strong> to save your changes as a separate JSON file, and <strong>Restore edits</strong> to reapply them to a fresh copy of this dashboard later.</p>
       <p><strong>+ Add matter</strong> on the All matters page opens a single-entry form — month comes first since that's the one thing every matter needs, client name and everything else is optional or defaults sensibly.</p>
       <p><strong>Import from CSV</strong> reads a spreadsheet straight from your computer — nothing is uploaded anywhere. Use <strong>CSV template</strong> first for the expected columns. Imported matters carry a green "imported" tag and can be removed with the ✕ button.</p>
-      <p><strong>+ Add new month</strong> extends the docket beyond the built-in Pre-May–July run. When you add one, any matter still sitting in the previous month that isn't finished/concluded or closed automatically moves forward into the new month, so nothing open quietly falls out of view. It suggests the next calendar month automatically, but you can type any label you want.</p>
+      <p><strong>+ Add new month</strong> extends the docket forward from September, one month at a time. When you add one, any matter still sitting in the previous month that isn't finished/concluded or closed automatically moves forward into the new month, so nothing open quietly falls out of view. It suggests the next calendar month automatically, but you can type any label you want.</p>
       <p>Each of the four matter pages can export its currently filtered rows to PDF via the browser's own print dialog (choose "Save as PDF") — this works offline, without any external service.</p>
 
       <div class="tagline">Tracking hearings and directives</div>
@@ -399,8 +421,8 @@
 
 
 <script>
-const MONTHS = ['PRE-MAY','MAY','JUNE','JULY','AUGUST'];
-const MONTH_LABEL = {'PRE-MAY':'Pre-May','MAY':'May','JUNE':'June','JULY':'July','AUGUST':'August'};
+const MONTHS = ['SEPTEMBER'];
+const MONTH_LABEL = {'SEPTEMBER':'September'};
 const SOURCES = ['NCDV','DAA','Referral','CourtNav','Unspecified'];
 const CATEGORIES = ['Domestic abuse','Section 8 orders','Care proceedings','Transfer of tenancy','Financials','Divorce'];
 const CATEGORY_LAW_AREA = {
@@ -432,13 +454,21 @@ const MATTERS_RAW = [
 
 let storageOK = true;
 try{ localStorage.setItem('__t__','1'); localStorage.removeItem('__t__'); }catch(e){ storageOK = false; }
-const warn = document.getElementById('storage-warning');
-if(storageOK){
-  warn.textContent = 'Every edit, category change, import and note below saves to this browser, tied to this file. See "Using & backing up this file" for what that means if the file is copied or shared.';
-}else{
-  warn.classList.add('blocked');
-  warn.textContent = 'This browser is blocking local storage for this file, so edits and notes below won\u2019t be saved between visits. Everything else works normally.';
+if(!storageOK){
+  const blockedWarn = document.getElementById('storage-blocked-warning');
+  blockedWarn.textContent = 'This browser is blocking local storage for this file, so edits and notes below won\u2019t be saved between visits. Everything else works normally.';
+  blockedWarn.style.display = 'block';
 }
+(function(){
+  const bar = document.getElementById('info-bar');
+  if(storageOK && localStorage.getItem('dillex-info-dismissed') === '1'){
+    bar.style.display = 'none';
+  }
+})();
+document.getElementById('info-dismiss-btn').addEventListener('click', ()=>{
+  document.getElementById('info-bar').style.display = 'none';
+  if(storageOK){ try{ localStorage.setItem('dillex-info-dismissed','1'); }catch(e){} }
+});
 
 function getOverride(field, id){
   if(!storageOK) return null;
@@ -527,7 +557,7 @@ function loadExtraMonths(){
 }
 function saveExtraMonths(){
   if(!storageOK) return;
-  const base = ['PRE-MAY','MAY','JUNE','JULY','AUGUST'];
+  const base = ['SEPTEMBER'];
   const extra = MONTHS.filter(m=>base.indexOf(m)===-1);
   try{ localStorage.setItem('dillex-extra-months', JSON.stringify(extra)); }catch(e){}
 }
@@ -589,6 +619,7 @@ function buildMatters(){
       nextHearing: getOverride('nexthearing',id) || o.nextHearing || '',
       hearingLog: (()=>{ try{ return JSON.parse(getOverride('log',id) || '[]'); }catch(e){ return []; } })(),
       directives: (()=>{ try{ return JSON.parse(getOverride('directives',id) || '[]'); }catch(e){ return []; } })(),
+      origin: o.origin || 'manual',
       custom:true, sample:false
     };
   });
@@ -756,7 +787,7 @@ function deleteBtn(m){
 
 function noteRowHtml(id, colspan){
   const val = getOverride('note', id) || '';
-  return `<tr class="note-row" id="note-${id}" style="display:none;"><td colspan="${colspan}">
+  return `<tr class="note-row" id="note-${id}" style="display:none;"><td colspan="${colspan}" style="padding:12px 14px;">
     <div class="note-block">
       <textarea id="ta-${id}" placeholder="Add a working note for this matter..." oninput="scheduleNoteSave('${id}')" onblur="saveNote('${id}')">${val}</textarea>
       <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
@@ -1059,11 +1090,17 @@ function filterAllMatters(){
   }).sort((a,b)=> (parseInt(a.no,10)||0) - (parseInt(b.no,10)||0));
 }
 
+function originTagHtml(m){
+  if(m.origin === 'csv') return '<span class="custom-tag">imported</span>';
+  if(m.origin === 'migrated') return '<span class="custom-tag migrated-tag">migrated</span>';
+  return '';
+}
+
 function matterRow(m, colCount){
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td class="sel-cell"></td>
-    <td class="no">${m.no}${m.custom?'<span class="custom-tag">imported</span>':''}</td>
+    <td class="no">${m.no}${originTagHtml(m)}</td>
     <td></td>
     <td class="month-tag">${MONTH_LABEL[m.month]||m.month}</td>
     <td></td>
@@ -1211,7 +1248,7 @@ function renderOngoing(){
     const hearingSoon = m.nextHearing && m.nextHearing <= today;
     const nextDir = nextDirectiveDate(m);
     const directiveOverdue = nextDir && nextDir < today;
-    tr.innerHTML = `<td class="no">${m.no}${m.custom?'<span class="custom-tag">imported</span>':''}</td>
+    tr.innerHTML = `<td class="no">${m.no}${originTagHtml(m)}</td>
       <td></td>
       <td class="month-tag">${MONTH_LABEL[m.month]||m.month}</td>
       <td></td>
@@ -1248,7 +1285,7 @@ function renderFinished(){
   body.innerHTML = '';
   rows.forEach(m=>{
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td class="no">${m.no}${m.custom?'<span class="custom-tag">imported</span>':''}</td>
+    tr.innerHTML = `<td class="no">${m.no}${originTagHtml(m)}</td>
       <td></td>
       <td class="month-tag">${MONTH_LABEL[m.month]||m.month}</td>
       <td>${categoryReadonly(m.categories)}</td>
@@ -1283,7 +1320,7 @@ function renderClosed(){
   rows.forEach(m=>{
     const tr = document.createElement('tr');
     if(m.status==='Not proceeding' && hasLegalAid(m)) tr.classList.add('laa-flag');
-    tr.innerHTML = `<td class="no">${m.no}${m.custom?'<span class="custom-tag">imported</span>':''}</td>
+    tr.innerHTML = `<td class="no">${m.no}${originTagHtml(m)}</td>
       <td></td>
       <td class="month-tag">${MONTH_LABEL[m.month]||m.month}</td>
       <td>${categoryReadonly(m.categories)}</td>
@@ -1404,6 +1441,31 @@ document.getElementById('backup-btn').addEventListener('click', ()=>{
 document.getElementById('restore-btn').addEventListener('click', ()=>{
   document.getElementById('restore-file').click();
 });
+
+document.getElementById('hard-reset-btn').addEventListener('click', ()=>{
+  if(!storageOK){ showToast('Local storage is blocked in this browser — there\'s nothing to clear.', 'warn'); return; }
+  let keyCount = 0;
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    if(k && k.indexOf('dillex-')===0) keyCount++;
+  }
+  if(keyCount===0){ showToast('Nothing stored for this file yet — already clean.', ''); return; }
+  showConfirmModal(
+    'Clear all data in this browser',
+    'This permanently deletes every matter, note, hearing log and directive stored in this browser for this file — including anything left over from a previous version. It cannot be undone, and it does not affect any backup files you\'ve already downloaded. Consider taking a backup first if you\'re not sure.',
+    ()=>{
+      const toRemove = [];
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if(k && k.indexOf('dillex-')===0) toRemove.push(k);
+      }
+      toRemove.forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} });
+      showInfoModal('Cleared', 'Removed ' + toRemove.length + ' stored item' + (toRemove.length===1?'':'s') + '. The page will now reload completely empty.');
+      setTimeout(()=>location.reload(), 900);
+    },
+    'Clear everything'
+  );
+});
 // ---------- Migrate older backup formats ----------
 // The category list, status list, and storage key names have all changed
 // across earlier versions of this tool. This translates old saved values
@@ -1480,13 +1542,14 @@ function migrateLegacyEdits(edits){
       return {
         id: 'mig-'+(o.id || (Date.now()+'-'+idx)),
         no: o.no || String(900+idx).padStart(3,'0'),
-        month: (MONTHS.indexOf((o.month||'').toUpperCase())>-1 ? o.month.toUpperCase() : 'PRE-MAY'),
+        month: (MONTHS.indexOf((o.month||'').toUpperCase())>-1 ? o.month.toUpperCase() : MONTHS[0]),
         clientRef: o.clientRef || o.name || o.clientName || '',
         source: o.source || 'Unspecified',
         categories: cats,
         status: OLD_STATUS_MAP[o.status] || o.status || 'Active',
         legalAid: o.legalAid || 'Unknown',
-        detail: o.detail || ''
+        detail: o.detail || '',
+        origin: 'migrated'
       };
     });
     migrated['dillex-custom-matters'] = JSON.stringify(existing.concat(translated));
@@ -1569,6 +1632,21 @@ document.getElementById('cat-overview-toggle').addEventListener('click', ()=>{
 });
 
 renderAll();
+
+(function(){
+  const banner = document.getElementById('fresh-copy-note');
+  const dismissed = storageOK && localStorage.getItem('dillex-fresh-dismissed') === '1';
+  if(MATTERS.length === 0 && !dismissed){
+    banner.style.display = 'flex';
+  }
+})();
+document.getElementById('fresh-restore-btn').addEventListener('click', ()=>{
+  document.getElementById('restore-file').click();
+});
+document.getElementById('fresh-dismiss-btn').addEventListener('click', ()=>{
+  if(storageOK){ try{ localStorage.setItem('dillex-fresh-dismissed','1'); }catch(e){} }
+  document.getElementById('fresh-copy-note').style.display = 'none';
+});
 
 // ---------- Add new month (with roll-forward) ----------
 document.getElementById('add-month-btn').addEventListener('click', ()=>{
@@ -1671,7 +1749,7 @@ document.getElementById('nm-submit').addEventListener('click', ()=>{
   const nextNo = (existingNos.length ? Math.max(...existingNos) : 0) + 1;
   const id = 'mc'+Date.now();
   const caseNo = String(nextNo).padStart(3,'0');
-  const record = { id, no:caseNo, month, clientRef, source, categories:[...nmDraftCategories], status, legalAid, detail };
+  const record = { id, no:caseNo, month, clientRef, source, categories:[...nmDraftCategories], status, legalAid, detail, origin:'manual' };
   saveCustomRaw(existing.concat([record]));
   rebuildData();
   renderAll();
@@ -1725,8 +1803,8 @@ function matchOrDefault(value, allowed, fallback){
 
 document.getElementById('template-btn').addEventListener('click', ()=>{
   const csv = 'Month,Client name,Source,Categories,Status,Legal aid,Next hearing,Reference\n'
-    + 'AUGUST,,NCDV,Domestic abuse,Active,Unknown,,\n'
-    + 'AUGUST,,CourtNav,Section 8 orders;Financials,Active,Applied,2026-09-15,\n';
+    + 'SEPTEMBER,,NCDV,Domestic abuse,Active,Unknown,,\n'
+    + 'SEPTEMBER,,CourtNav,Section 8 orders;Financials,Active,Applied,2026-10-05,\n';
   const blob = new Blob([csv], {type:'text/csv'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1767,7 +1845,7 @@ document.getElementById('import-file').addEventListener('change', (ev)=>{
       const ref = pickField(row,['reference','ref','no','case no']);
       const no = ref || String(nextNo++).padStart(3,'0');
       const id = 'mc'+Date.now()+'-'+idx;
-      added.push({ id, no, month, clientRef, source, categories, status, legalAid, detail:'', nextHearing });
+      added.push({ id, no, month, clientRef, source, categories, status, legalAid, detail:'', nextHearing, origin:'csv' });
     });
 
     if(added.length===0){
