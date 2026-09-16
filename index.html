@@ -48,8 +48,9 @@
   .overview-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-bottom:6px;}
   .cat-overview-toggle{background:none;border:none;color:var(--ochre);font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;padding:2px 0;margin-bottom:1.5rem;}
   .cat-overview-toggle:hover{text-decoration:underline;}
-  .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin-bottom:1.25rem;}
+  .stats{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin-bottom:1.25rem;}
   .stats.stats-cats{grid-template-columns:repeat(6,1fr);margin-bottom:2rem;}
+  .stats.stats-workload{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));}
   .stat{background:var(--paper);padding:12px 14px;transition:background-color .15s ease;}
   .stat:hover{background:#FBFAF7;}
   .stat .n{font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:500;line-height:1;}
@@ -93,6 +94,10 @@
   .custom-tag{font-size:9px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.04em;color:var(--forest);background:var(--forest-bg);padding:1px 5px;border-radius:8px;margin-left:5px;}
   .custom-tag.migrated-tag{color:var(--plum);background:var(--plum-bg);}
   .del-btn{background:none;border:none;color:var(--burgundy);cursor:pointer;font-size:13px;padding:0 4px;}
+  .flag-btn{background:none;border:none;cursor:pointer;font-size:13px;padding:0 4px;opacity:.3;filter:grayscale(1);transition:opacity .12s ease, filter .12s ease;}
+  .flag-btn:hover{opacity:.7;}
+  .flag-btn.active{opacity:1;filter:none;}
+  tbody tr.flagged-row{box-shadow:inset 3px 0 0 var(--plum);}
   .del-btn:hover{font-weight:600;}
   .pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-family:'IBM Plex Mono',monospace;letter-spacing:.02em;white-space:nowrap;margin:1px 3px 1px 0;}
   .pill-active{background:var(--forest-bg);color:var(--forest);}
@@ -262,6 +267,8 @@
   <div class="stats" id="stats"></div>
   <button class="cat-overview-toggle" id="cat-overview-toggle">▾ Show category breakdown</button>
   <div class="stats stats-cats" id="stats-categories" style="display:none;margin-top:8px;"></div>
+  <button class="cat-overview-toggle" id="workload-overview-toggle">▾ Show workload by fee earner</button>
+  <div class="stats stats-cats stats-workload" id="stats-workload" style="display:none;margin-top:8px;"></div>
 
   <div class="tabs">
     <div class="tab active" data-tab="all">All matters <span class="tab-count" id="tab-count-all"></span></div>
@@ -285,6 +292,7 @@
       <div class="controls" style="margin-bottom:2px;">
         <select id="nm-month"></select>
         <input type="text" id="nm-clientref" placeholder="Client name (optional)">
+        <input type="text" id="nm-conduct" placeholder="Who has conduct? (optional)" list="conduct-suggestions">
         <select id="nm-source"></select>
         <select id="nm-status"></select>
         <select id="nm-laa"></select>
@@ -309,6 +317,7 @@
         <option value="source">Group by: source</option>
         <option value="category">Group by: category</option>
         <option value="lawarea">Group by: law area</option>
+        <option value="conduct">Group by: fee earner</option>
         <option value="none">No grouping</option>
       </select>
       <select id="am-sortby">
@@ -322,7 +331,13 @@
       <select id="am-source"><option value="">All sources</option></select>
       <select id="am-category"><option value="">All categories</option></select>
       <select id="am-lawarea"><option value="">All law areas</option></select>
+      <select id="am-conduct"><option value="">All fee earners</option></select>
       <select id="am-status"><option value="">All statuses</option></select>
+    </div>
+    <div class="controls">
+      <label class="select-all-label" style="cursor:pointer;"><input type="checkbox" id="am-my-matters"> My matters only</label>
+      <label class="select-all-label" style="cursor:pointer;"><input type="checkbox" id="am-flagged-only"> 🚩 Flagged only</label>
+      <input type="text" id="my-name-input" placeholder="Your name (for 'My matters')" style="max-width:220px;padding:6px 10px;font-size:12px;border:1px solid var(--rule);border-radius:2px;">
     </div>
 
     <div class="selection-bar" id="selection-bar" style="display:none;">
@@ -347,7 +362,7 @@
     </div>
     <div class="count" id="o-count"></div>
     <div class="table-wrap"><table>
-      <thead><tr><th>No.</th><th>Client name</th><th>Month</th><th>Next hearing</th><th>Next directive</th><th>Legal aid</th><th>HMCTS portal</th><th>Status</th><th>Next action / details</th><th></th></tr></thead>
+      <thead><tr><th>No.</th><th>Client name</th><th>Conduct</th><th>Month</th><th>Next hearing</th><th>Next directive</th><th>Legal aid</th><th>HMCTS portal</th><th>Status</th><th>Next action / details</th><th></th></tr></thead>
       <tbody id="o-body"></tbody>
     </table></div>
   </div>
@@ -419,6 +434,15 @@
       <h3>A simple flag, plus an optional reference number</h3>
       <p>Each matter on <strong>Ongoing matters</strong> has an <strong>HMCTS portal</strong> column (Yes / No / Unknown) — a quick way to see which live matters are being managed through the portal versus paper-based. If you need to record the actual portal reference number, that lives inside the same expandable area as the notes and hearing log (click <strong>+ note</strong>).</p>
 
+      <div class="tagline">Who has conduct</div>
+      <h3>A free-text field, filterable and groupable, plus a "my matters" view</h3>
+      <p>Every matter on <strong>All matters</strong> and <strong>Ongoing matters</strong> has a <strong>Conduct</strong> field — type in whoever's running it. It's free text rather than a fixed list, so there's nothing to maintain as the team changes; type a name once and it's suggested automatically next time. Filter by fee earner, or group All matters by fee earner to see everyone's caseload side by side. The <strong>overview</strong> also has a collapsible workload breakdown showing matter counts per person, including anything unassigned.</p>
+      <p>Enter your own name in the small box next to the filters, then tick <strong>My matters only</strong> to see just your own caseload — the name is remembered for next time, in this browser.</p>
+
+      <div class="tagline">Flagging for review</div>
+      <h3>A quick marker, separate from status</h3>
+      <p>The 🚩 button on each matter (next to "+ note") marks it for review — useful for supervision, or anything that needs a second pair of eyes regardless of what stage it's at. Flagged matters get a coloured edge in the table and count toward a <strong>Flagged for review</strong> figure in the overview; tick <strong>Flagged only</strong> on All matters to see just those.</p>
+
       <div class="tagline">Finding things faster</div>
       <h3>A search that works from anywhere, and headers that stay in view</h3>
       <p>The search box at the top of the page works regardless of which tab you're on — type a case number or client name and press <strong>Find</strong> (or Enter) to jump straight to it in All matters, with every other filter cleared out of the way. Table and tab headers now stay visible as you scroll down a long list, so you're never guessing which column — or which section — you're looking at partway down the page. Each tab also shows a live count, so you can see at a glance how much is in Ongoing, Finished/concluded or Closed without opening them.</p>
@@ -439,6 +463,7 @@
 </div>
 
 <div id="print-area"></div>
+<datalist id="conduct-suggestions"></datalist>
 
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal-box">
@@ -645,6 +670,8 @@ function buildMatters(){
         directives: (()=>{ try{ return JSON.parse(getOverride('directives',id) || '[]'); }catch(e){ return []; } })(),
         hmctsPortal: getOverride('hmcts',id) || 'Unknown',
         hmctsRef: getOverride('hmctsref',id) || '',
+        conduct: getOverride('conduct',id) || '',
+        flagged: getOverride('flagged',id) === '1',
         createdAt: 0,
         custom:false, sample:true
       };
@@ -667,6 +694,8 @@ function buildMatters(){
       directives: (()=>{ try{ return JSON.parse(getOverride('directives',id) || '[]'); }catch(e){ return []; } })(),
       hmctsPortal: getOverride('hmcts',id) || o.hmctsPortal || 'Unknown',
       hmctsRef: getOverride('hmctsref',id) || o.hmctsRef || '',
+      conduct: getOverride('conduct',id) || o.conduct || '',
+      flagged: getOverride('flagged',id) === '1' || !!o.flagged,
       origin: o.origin || 'manual',
       createdAt: o.createdAt || (()=>{ const m = String(id).match(/(\d{10,})/); return m ? parseInt(m[1],10) : 0; })(),
       custom:true, sample:false
@@ -687,6 +716,16 @@ function fillSelect(selId, values, allLabel, labelMap){
   const prevValue = el.value;
   el.innerHTML = `<option value="">${allLabel}</option>` + values.map(v=>`<option value="${v}">${labelMap?(labelMap[v]||v):v}</option>`).join('');
   if(values.indexOf(prevValue)>-1) el.value = prevValue;
+}
+function getMyName(){
+  if(!storageOK) return '';
+  try{ return localStorage.getItem('dillex-my-name') || ''; }catch(e){ return ''; }
+}
+function refreshConductOptions(){
+  const names = [...new Set(MATTERS.map(m=>m.conduct).filter(Boolean))].sort();
+  fillSelect('am-conduct', names, 'All fee earners');
+  const datalist = document.getElementById('conduct-suggestions');
+  if(datalist) datalist.innerHTML = names.map(n=>`<option value="${esc(n)}">`).join('');
 }
 function refreshMonthSelects(){
   fillSelect('am-month', MONTHS, 'All months', MONTH_LABEL);
@@ -795,6 +834,36 @@ function clientRefInput(m){
   inp.style.minWidth = '90px';
   attachAutosave(inp, ()=>{ m.clientRef = inp.value; setOverride('clientref', m.id, m.clientRef); });
   return inp;
+}
+
+function conductInput(m){
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.className = 'edit-text';
+  inp.value = m.conduct;
+  inp.placeholder = 'Who has conduct?';
+  inp.setAttribute('list', 'conduct-suggestions');
+  inp.style.minWidth = '110px';
+  attachAutosave(inp, ()=>{
+    m.conduct = inp.value;
+    setOverride('conduct', m.id, m.conduct);
+    refreshConductOptions();
+  });
+  return inp;
+}
+
+function flagToggleBtn(m){
+  const btn = document.createElement('button');
+  btn.className = 'flag-btn' + (m.flagged ? ' active' : '');
+  btn.title = m.flagged ? 'Flagged for review — click to clear' : 'Flag for review';
+  btn.setAttribute('aria-label', (m.flagged ? 'Clear review flag' : 'Flag') + ' for case ' + m.no);
+  btn.textContent = '🚩';
+  btn.addEventListener('click', ()=>{
+    m.flagged = !m.flagged;
+    setOverride('flagged', m.id, m.flagged ? '1' : '0');
+    renderAll();
+  });
+  return btn;
 }
 
 function outcomeInput(m){
@@ -1058,6 +1127,7 @@ function renderStats(){
   const finished = MATTERS.filter(m=>m.status==='Finished / concluded').length;
   const closedCount = MATTERS.filter(m=>m.status==='Closed' || (m.status==='Not proceeding' && hasLegalAid(m))).length;
   const overdueDirectives = countOverdueDirectives();
+  const flaggedCount = MATTERS.filter(m=>m.flagged).length;
   const el = document.getElementById('stats');
   const cells = [
     ['Total matters', total, ''],
@@ -1065,7 +1135,8 @@ function renderStats(){
     ['Not proceeding', notProc, 'flag'],
     ['Finished / concluded', finished, 'done'],
     ['Closed (incl. LAA not-proceeding)', closedCount, 'closed'],
-    ['Directives overdue', overdueDirectives, overdueDirectives>0 ? 'flag' : '']
+    ['Directives overdue', overdueDirectives, overdueDirectives>0 ? 'flag' : ''],
+    ['🚩 Flagged for review', flaggedCount, flaggedCount>0 ? 'flag' : '']
   ];
   el.innerHTML = cells.map(c=>`<div class="stat ${c[2]}"><div class="n">${c[1]}</div><div class="l">${c[0]}</div></div>`).join('');
 
@@ -1074,6 +1145,17 @@ function renderStats(){
     const count = MATTERS.filter(m=>m.categories.indexOf(cat)>-1).length;
     return `<div class="stat cat-stat ${CAT_CLASS[cat]||''}"><div class="n">${count}</div><div class="l">${cat}</div></div>`;
   }).join('');
+
+  const workloadEl = document.getElementById('stats-workload');
+  if(workloadEl){
+    const names = [...new Set(MATTERS.map(m=>m.conduct).filter(Boolean))].sort();
+    const unassigned = MATTERS.filter(m=>!m.conduct || !m.conduct.trim()).length;
+    const entries = names.map(n=>[n, MATTERS.filter(m=>m.conduct===n).length]);
+    if(unassigned>0) entries.push(['Unassigned', unassigned]);
+    workloadEl.innerHTML = entries.length
+      ? entries.map(([n,c])=>`<div class="stat"><div class="n">${c}</div><div class="l">${esc(n)}</div></div>`).join('')
+      : '<div class="empty-state" style="grid-column:1/-1;"><div class="icon">◇</div>No fee earners recorded yet — set "Conduct" on a matter to see workload here.</div>';
+  }
 }
 
 function renderTabCounts(){
@@ -1086,6 +1168,7 @@ function renderTabCounts(){
 function renderAll(){
   renderStats();
   renderTabCounts();
+  refreshConductOptions();
   renderAllMatters();
   renderOngoing();
   renderFinished();
@@ -1185,15 +1268,22 @@ function filterAllMatters(){
   const source = document.getElementById('am-source').value;
   const category = document.getElementById('am-category').value;
   const lawarea = document.getElementById('am-lawarea').value;
+  const conduct = document.getElementById('am-conduct').value;
   const status = document.getElementById('am-status').value;
   const sortBy = document.getElementById('am-sortby').value;
+  const myMattersOnly = document.getElementById('am-my-matters').checked;
+  const flaggedOnly = document.getElementById('am-flagged-only').checked;
+  const myName = getMyName().trim().toLowerCase();
   const filtered = MATTERS.filter(m=>{
     if(q && m.no.toLowerCase().indexOf(q)===-1 && (m.clientRef||'').toLowerCase().indexOf(q)===-1) return false;
     if(month && m.month!==month) return false;
     if(source && m.source!==source) return false;
     if(category && m.categories.indexOf(category)===-1) return false;
     if(lawarea && matterLawAreas(m).indexOf(lawarea)===-1) return false;
+    if(conduct && m.conduct!==conduct) return false;
     if(status && m.status!==status) return false;
+    if(flaggedOnly && !m.flagged) return false;
+    if(myMattersOnly && (!myName || (m.conduct||'').trim().toLowerCase()!==myName)) return false;
     return true;
   });
   return sortMatters(filtered, sortBy);
@@ -1207,9 +1297,11 @@ function originTagHtml(m){
 
 function matterRow(m, colCount){
   const tr = document.createElement('tr');
+  if(m.flagged) tr.classList.add('flagged-row');
   tr.innerHTML = `
     <td class="sel-cell"></td>
     <td class="no">${m.no}${originTagHtml(m)}</td>
+    <td></td>
     <td></td>
     <td class="month-tag">${MONTH_LABEL[m.month]||m.month}</td>
     <td></td>
@@ -1228,14 +1320,17 @@ function matterRow(m, colCount){
   selTd.appendChild(cb);
   const refTd = tr.children[2];
   refTd.appendChild(clientRefInput(m));
-  const srcTd = tr.children[4];
+  const conductTd = tr.children[3];
+  conductTd.appendChild(conductInput(m));
+  const srcTd = tr.children[5];
   srcTd.appendChild(optionList(SOURCES, m.source, v=>{ m.source=v; setOverride('source',m.id,v); renderAll(); }));
-  const catTd = tr.children[5];
+  const catTd = tr.children[6];
   catTd.appendChild(categoryEditor(m));
-  const statTd = tr.children[6];
+  const statTd = tr.children[7];
   statTd.appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
-  const actionTd = tr.children[7];
-  actionTd.innerHTML = `<button class="expand-btn" onclick="toggleNote('${m.id}')" aria-label="Open notes and history for case ${m.no}">+ note</button>`;
+  const actionTd = tr.children[8];
+  actionTd.appendChild(flagToggleBtn(m));
+  actionTd.insertAdjacentHTML('beforeend', ` <button class="expand-btn" onclick="toggleNote('${m.id}')" aria-label="Open notes and history for case ${m.no}">+ note</button>`);
   actionTd.appendChild(deleteBtn(m));
   return tr;
 }
@@ -1244,11 +1339,11 @@ function buildMatterTable(rows){
   const wrap = document.createElement('div');
   wrap.className = 'table-wrap';
   const table = document.createElement('table');
-  table.innerHTML = `<thead><tr><th></th><th>No.</th><th>Client name</th><th>Month</th><th>Source</th><th>Category</th><th>Status</th><th></th></tr></thead><tbody></tbody>`;
+  table.innerHTML = `<thead><tr><th></th><th>No.</th><th>Client name</th><th>Conduct</th><th>Month</th><th>Source</th><th>Category</th><th>Status</th><th></th></tr></thead><tbody></tbody>`;
   const tbody = table.querySelector('tbody');
   rows.forEach(m=>{
     tbody.appendChild(matterRow(m));
-    tbody.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 8));
+    tbody.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 9));
   });
   wrap.appendChild(table);
   return wrap;
@@ -1299,6 +1394,12 @@ function renderAllMatters(){
       const areas = matterLawAreas(m);
       if(areas.length===0){ groups['Unclassified'].push(m); }
       else { areas.forEach(a=>{ (groups[a] = groups[a]||[]).push(m); }); }
+    });
+  } else if(groupBy==='conduct'){
+    groups['Unassigned'] = [];
+    rows.forEach(m=>{
+      const key = m.conduct && m.conduct.trim() ? m.conduct.trim() : 'Unassigned';
+      (groups[key] = groups[key]||[]).push(m);
     });
   }
 
@@ -1358,10 +1459,12 @@ function renderOngoing(){
   const today = todayStr();
   rows.forEach(m=>{
     const tr = document.createElement('tr');
+    if(m.flagged) tr.classList.add('flagged-row');
     const hearingSoon = m.nextHearing && m.nextHearing <= today;
     const nextDir = nextDirectiveDate(m);
     const directiveOverdue = nextDir && nextDir < today;
     tr.innerHTML = `<td class="no">${m.no}${originTagHtml(m)}</td>
+      <td></td>
       <td></td>
       <td class="month-tag">${MONTH_LABEL[m.month]||m.month}</td>
       <td></td>
@@ -1371,18 +1474,19 @@ function renderOngoing(){
       <td></td><td></td>
       <td><button class="expand-btn" onclick="toggleNote('${m.id}')" aria-label="Open notes and history for case ${m.no}">+ note</button></td>`;
     tr.children[1].appendChild(clientRefInput(m));
-    tr.children[3].appendChild(nextHearingInput(m));
+    tr.children[2].appendChild(conductInput(m));
+    tr.children[4].appendChild(nextHearingInput(m));
     if(directiveOverdue) tr.classList.add('overdue-row');
     else if(hearingSoon) tr.classList.add('laa-flag');
-    tr.children[5].appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
-    tr.children[6].appendChild(optionList(HMCTS_OPTIONS, m.hmctsPortal, v=>{ m.hmctsPortal=v; setOverride('hmcts',m.id,v); }));
-    tr.children[7].appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
-    tr.children[8].appendChild(detailInput(m));
-    tr.children[9].appendChild(deleteBtn(m));
+    tr.children[6].appendChild(optionList(LAAS, m.legalAid, v=>{ m.legalAid=v; setOverride('laa',m.id,v); renderAll(); }));
+    tr.children[7].appendChild(optionList(HMCTS_OPTIONS, m.hmctsPortal, v=>{ m.hmctsPortal=v; setOverride('hmcts',m.id,v); }));
+    tr.children[8].appendChild(optionList(STATUSES, m.status, v=>{ m.status=v; setOverride('status',m.id,v); renderAll(); }));
+    tr.children[9].appendChild(detailInput(m));
+    tr.children[10].appendChild(deleteBtn(m));
     body.appendChild(tr);
-    body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 10));
+    body.insertAdjacentHTML('beforeend', noteRowHtml(m.id, 11));
   });
-  if(rows.length===0) body.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="icon">◇</div>No ongoing matters match this filter.</div></td></tr>';
+  if(rows.length===0) body.innerHTML = '<tr><td colspan="11"><div class="empty-state"><div class="icon">◇</div>No ongoing matters match this filter.</div></td></tr>';
 }
 
 // ---------- Finished / concluded ----------
@@ -1462,7 +1566,18 @@ document.querySelectorAll('.tab').forEach(t=>{
   });
 });
 
-['am-search','am-groupby','am-sortby','am-month','am-source','am-category','am-lawarea','am-status'].forEach(id=>document.getElementById(id).addEventListener('input', renderAllMatters));
+['am-search','am-groupby','am-sortby','am-month','am-source','am-category','am-lawarea','am-conduct','am-status','am-my-matters','am-flagged-only'].forEach(id=>document.getElementById(id).addEventListener('input', renderAllMatters));
+
+(function(){
+  const nameInput = document.getElementById('my-name-input');
+  nameInput.value = getMyName();
+  const saveName = ()=>{
+    if(storageOK){ try{ localStorage.setItem('dillex-my-name', nameInput.value.trim()); }catch(e){} }
+    renderAllMatters();
+  };
+  nameInput.addEventListener('blur', saveName);
+  nameInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') nameInput.blur(); });
+})();
 document.getElementById('o-month').addEventListener('change', renderOngoing);
 document.getElementById('o-sort-hearing').addEventListener('change', renderOngoing);
 document.getElementById('f-month').addEventListener('change', renderFinished);
@@ -1496,16 +1611,16 @@ function monthLabel(prefix){
 
 document.getElementById('am-export').addEventListener('click', ()=>{
   const rows = filterAllMatters();
-  const cols = ['No.','Client name','Month','Source','Category','Status'];
-  const data = rows.map(m=>[m.no, m.clientRef, MONTH_LABEL[m.month]||m.month, m.source, m.categories.join('; ')||'—', m.status]);
+  const cols = ['No.','Client name','Conduct','Month','Source','Category','Status'];
+  const data = rows.map(m=>[m.no, m.clientRef, m.conduct, MONTH_LABEL[m.month]||m.month, m.source, m.categories.join('; ')||'—', m.status]);
   printRows('All matters', monthLabel('am'), cols, data);
 });
 document.getElementById('o-export').addEventListener('click', ()=>{
   const rows = filterOngoing();
-  const cols = ['No.','Client name','Month','Next hearing','Next directive','Legal aid','HMCTS portal','Status','Next action / details'];
+  const cols = ['No.','Client name','Conduct','Month','Next hearing','Next directive','Legal aid','HMCTS portal','Status','Next action / details'];
   const data = rows.map(m=>{
     const nd = nextDirectiveDate(m);
-    return [m.no, m.clientRef, MONTH_LABEL[m.month]||m.month, m.nextHearing?formatLogDate(m.nextHearing):'—', nd?formatLogDate(nd):'—', m.legalAid, m.hmctsPortal, m.status, m.detail];
+    return [m.no, m.clientRef, m.conduct, MONTH_LABEL[m.month]||m.month, m.nextHearing?formatLogDate(m.nextHearing):'—', nd?formatLogDate(nd):'—', m.legalAid, m.hmctsPortal, m.status, m.detail];
   });
   printRows('Ongoing matters', monthLabel('o'), cols, data);
 });
@@ -1765,6 +1880,18 @@ document.getElementById('cat-overview-toggle').addEventListener('click', ()=>{
     el.style.animation = 'panelFade .14s ease-out';
   }
 });
+document.getElementById('workload-overview-toggle').addEventListener('click', ()=>{
+  const el = document.getElementById('stats-workload');
+  const btn = document.getElementById('workload-overview-toggle');
+  const showing = el.style.display !== 'none';
+  el.style.display = showing ? 'none' : 'grid';
+  btn.textContent = showing ? '▾ Show workload by fee earner' : '▴ Hide workload by fee earner';
+  if(!showing){
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = 'panelFade .14s ease-out';
+  }
+});
 
 // ---------- Keyboard shortcuts ----------
 document.addEventListener('keydown', (e)=>{
@@ -1903,6 +2030,7 @@ function resetNmForm(){
   const latestMonth = MONTHS[MONTHS.length-1];
   document.getElementById('nm-month').value = latestMonth;
   document.getElementById('nm-clientref').value = '';
+  document.getElementById('nm-conduct').value = '';
   document.getElementById('nm-source').value = SOURCES[0];
   document.getElementById('nm-status').value = 'Active';
   document.getElementById('nm-laa').value = 'Unknown';
@@ -1938,6 +2066,7 @@ document.getElementById('nm-submit').addEventListener('click', ()=>{
   errEl.classList.remove('show');
   if(!storageOK){ showToast('Local storage is blocked in this browser, so a new matter can\'t be saved here.', 'warn'); return; }
   const clientRef = document.getElementById('nm-clientref').value.trim();
+  const conduct = document.getElementById('nm-conduct').value.trim();
   const source = document.getElementById('nm-source').value;
   const status = document.getElementById('nm-status').value;
   const legalAid = document.getElementById('nm-laa').value;
@@ -1948,7 +2077,7 @@ document.getElementById('nm-submit').addEventListener('click', ()=>{
   const nextNo = (existingNos.length ? Math.max(...existingNos) : 0) + 1;
   const id = 'mc'+Date.now();
   const caseNo = String(nextNo).padStart(3,'0');
-  const record = { id, no:caseNo, month, clientRef, source, categories:[...nmDraftCategories], status, legalAid, detail, origin:'manual', createdAt: Date.now() };
+  const record = { id, no:caseNo, month, clientRef, conduct, source, categories:[...nmDraftCategories], status, legalAid, detail, origin:'manual', createdAt: Date.now() };
   saveCustomRaw(existing.concat([record]));
   rebuildData();
   renderAll();
@@ -2001,9 +2130,9 @@ function matchOrDefault(value, allowed, fallback){
 }
 
 document.getElementById('template-btn').addEventListener('click', ()=>{
-  const csv = 'Month,Client name,Source,Categories,Status,Legal aid,Next hearing,HMCTS portal,Reference\n'
-    + 'SEPTEMBER,,NCDV,Domestic abuse,Active,Unknown,,Unknown,\n'
-    + 'SEPTEMBER,,CourtNav,Section 8 orders;Financials,Active,Applied,2026-10-05,Yes,\n';
+  const csv = 'Month,Client name,Conduct,Source,Categories,Status,Legal aid,Next hearing,HMCTS portal,Reference\n'
+    + 'SEPTEMBER,,,NCDV,Domestic abuse,Active,Unknown,,Unknown,\n'
+    + 'SEPTEMBER,,,CourtNav,Section 8 orders;Financials,Active,Applied,2026-10-05,Yes,\n';
   const blob = new Blob([csv], {type:'text/csv'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2034,6 +2163,7 @@ document.getElementById('import-file').addEventListener('change', (ev)=>{
     parsedRows.forEach((row, idx)=>{
       const month = matchOrDefault(pickField(row,['month']), MONTHS, latestMonth);
       const clientRef = pickField(row,['client name','client','client ref','clientref','client reference']);
+      const conduct = pickField(row,['conduct','fee earner','feeearner','handler']);
       const source = matchOrDefault(pickField(row,['source']), SOURCES, 'Unspecified');
       const catsRaw = pickField(row,['categories','category']);
       const categories = catsRaw ? catsRaw.split(';').map(c=>matchOrDefault(c.trim(), CATEGORIES, null)).filter(Boolean) : [];
@@ -2045,7 +2175,7 @@ document.getElementById('import-file').addEventListener('change', (ev)=>{
       const ref = pickField(row,['reference','ref','no','case no']);
       const no = ref || String(nextNo++).padStart(3,'0');
       const id = 'mc'+Date.now()+'-'+idx;
-      added.push({ id, no, month, clientRef, source, categories, status, legalAid, detail:'', nextHearing, hmctsPortal, origin:'csv', createdAt: Date.now()+idx });
+      added.push({ id, no, month, clientRef, conduct, source, categories, status, legalAid, detail:'', nextHearing, hmctsPortal, origin:'csv', createdAt: Date.now()+idx });
     });
 
     if(added.length===0){
