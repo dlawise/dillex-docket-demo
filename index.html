@@ -44,6 +44,8 @@
   .tbtn.ghost{border-color:var(--rule);color:var(--ink-soft);}
   .tbtn.ghost:hover{background:var(--grey-bg);color:var(--ink);border-color:var(--rule);}
   .tbtn.danger{border-color:var(--burgundy);color:var(--burgundy);}
+  .tbtn.active-connection{border-color:var(--forest);color:var(--forest);background:var(--forest-bg);}
+  .tbtn.active-connection:hover{background:var(--forest);color:var(--paper);}
   .tbtn.danger:hover{background:var(--burgundy);color:var(--paper);}
   .overview-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);margin-bottom:6px;}
   .cat-overview-toggle{background:none;border:none;color:var(--ochre);font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;padding:2px 0;margin-bottom:1.5rem;}
@@ -248,6 +250,7 @@
       <button class="tbtn" id="backup-btn">⬇ Backup edits</button>
       <button class="tbtn ghost" id="restore-btn">⬆ Restore edits</button>
       <input type="file" id="restore-file" accept="application/json,.json" style="display:none;">
+      <button class="tbtn ghost" id="connect-file-btn" aria-label="Connect a file to auto-save changes to, on supported browsers">🔗 Auto-save to a file</button>
     </div>
     <div class="toolbar-divider"></div>
     <div class="toolbar-group">
@@ -419,7 +422,8 @@
 
       <div class="tagline">Editing, importing and exporting</div>
       <h3>Edits, imports and notes all save to this PC and this file location only</h3>
-      <p>Every dropdown, category pill, text field and note box saves to the browser's local storage, tied to this exact file in this exact folder on this exact computer. Edits won't appear if the file is copied elsewhere or opened by a colleague from their own copy — each copy keeps its own separate edits. Use <strong>Backup edits</strong> to save your changes as a separate JSON file, and <strong>Restore edits</strong> to reapply them to a fresh copy of this dashboard later.</p>
+      <p>Every dropdown, category pill, text field and note box saves to the browser's local storage automatically as you go — there is no separate "save" step anywhere in this tool, and typing pauses for under a second before it's written. That storage is tied to this exact file in this exact folder on this exact computer; edits won't appear if the file is copied elsewhere or opened by a colleague from their own copy, since each copy keeps its own separate edits. Use <strong>Backup edits</strong> to save your changes as a separate JSON file, and <strong>Restore edits</strong> to reapply them to a fresh copy of this dashboard later.</p>
+      <p><strong>🔗 Auto-save to a file</strong> (Chrome or Edge only) goes a step further: pick or create a file once, and every change from then on writes to that same file automatically, a couple of seconds after you make it — no repeated downloads, no separate backup step, and the on-screen backup reminder switches itself off while it's connected. This only lasts for the current browser session — reopening the file later means reconnecting with one click, since browsers require that click before letting a page write to your disk again. Firefox and Safari don't support this at all; on those, the regular Backup/Restore buttons and reminder are what to rely on.</p>
       <p><strong>+ Add matter</strong> on the All matters page opens a single-entry form — month comes first since that's the one thing every matter needs, client name and everything else is optional or defaults sensibly.</p>
       <p><strong>Import from CSV</strong> reads a spreadsheet straight from your computer — nothing is uploaded anywhere. Use <strong>CSV template</strong> first for the expected columns. Imported matters carry a green "imported" tag and can be removed with the ✕ button.</p>
       <p><strong>+ Add new month</strong> extends the docket forward from September, one month at a time. When you add one, any matter still sitting in the previous month that isn't finished/concluded or closed automatically moves forward into the new month, so nothing open quietly falls out of view. It suggests the next calendar month automatically, but you can type any label you want.</p>
@@ -540,6 +544,7 @@ function setOverride(field, id, val){
     localStorage.setItem('dillex-'+field+'-'+id, val);
     localStorage.setItem('dillex-last-edit-time', String(Date.now()));
     if(typeof updateBackupReminder === 'function') updateBackupReminder();
+    if(typeof scheduleAutoSaveWrite === 'function') scheduleAutoSaveWrite();
   }catch(e){}
 }
 
@@ -646,6 +651,7 @@ function saveCustomRaw(arr){
     localStorage.setItem('dillex-custom-matters', JSON.stringify(arr));
     localStorage.setItem('dillex-last-edit-time', String(Date.now()));
     if(typeof updateBackupReminder === 'function') updateBackupReminder();
+    if(typeof scheduleAutoSaveWrite === 'function') scheduleAutoSaveWrite();
   }catch(e){}
 }
 
@@ -1638,22 +1644,26 @@ document.getElementById('c-export').addEventListener('click', ()=>{
 });
 
 // ---------- Backup / restore ----------
-function performBackup(){
-  if(!storageOK){
-    showToast('Local storage is blocked in this browser, so there\'s nothing here to back up.', 'warn');
-    return;
-  }
+function buildBackupPayload(){
   const dump = {};
   let keyCount = 0;
   for(let i=0;i<localStorage.length;i++){
     const k = localStorage.key(i);
     if(k && k.indexOf('dillex-')===0){ dump[k] = localStorage.getItem(k); keyCount++; }
   }
+  return { payload: { source:'dillex-case-dashboard', exported: new Date().toISOString(), edits: dump }, keyCount };
+}
+
+function performBackup(){
+  if(!storageOK){
+    showToast('Local storage is blocked in this browser, so there\'s nothing here to back up.', 'warn');
+    return;
+  }
+  const { payload, keyCount } = buildBackupPayload();
   if(keyCount===0){
     showToast('No edits yet to back up — this copy is still at its starting state.', '');
     return;
   }
-  const payload = { source:'dillex-case-dashboard', exported: new Date().toISOString(), edits: dump };
   let blob;
   try{
     blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
@@ -1681,6 +1691,7 @@ document.getElementById('backup-reminder-dismiss').addEventListener('click', ()=
 function updateBackupReminder(){
   const bar = document.getElementById('backup-reminder');
   if(!storageOK){ bar.style.display = 'none'; return; }
+  if(autoSaveHandle){ bar.style.display = 'none'; return; }
   let dismissedThisSession = false;
   try{ dismissedThisSession = sessionStorage.getItem('dillex-reminder-dismissed-session') === '1'; }catch(e){}
   if(dismissedThisSession){ bar.style.display = 'none'; return; }
@@ -1690,6 +1701,72 @@ function updateBackupReminder(){
 }
 document.getElementById('restore-btn').addEventListener('click', ()=>{
   document.getElementById('restore-file').click();
+});
+
+// ---------- Auto-save directly to a file on disk (Chrome/Edge only) ----------
+let autoSaveHandle = null;
+let autoSaveTimer = null;
+const fsApiSupported = typeof window.showSaveFilePicker === 'function';
+
+async function writeAutoSaveFile(){
+  if(!autoSaveHandle) return;
+  try{
+    const { payload } = buildBackupPayload();
+    const writable = await autoSaveHandle.createWritable();
+    await writable.write(JSON.stringify(payload, null, 2));
+    await writable.close();
+    try{ localStorage.setItem('dillex-last-backup-time', String(Date.now())); }catch(e){}
+    updateBackupReminder();
+  }catch(e){
+    showToast('Lost the connection to the auto-save file — reconnect from Options & tools.', 'warn');
+    autoSaveHandle = null;
+    const btn = document.getElementById('connect-file-btn');
+    btn.textContent = '🔗 Auto-save to a file';
+    btn.classList.remove('active-connection');
+  }
+}
+function scheduleAutoSaveWrite(){
+  if(!autoSaveHandle) return;
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(writeAutoSaveFile, 2000);
+}
+
+document.getElementById('connect-file-btn').addEventListener('click', async ()=>{
+  if(autoSaveHandle){
+    showConfirmModal(
+      'Stop auto-saving to file',
+      'Stop writing changes to "' + (autoSaveHandle.name || 'the connected file') + '" automatically? Your data stays exactly as it is — this only disconnects the file.',
+      ()=>{
+        autoSaveHandle = null;
+        const btn = document.getElementById('connect-file-btn');
+        btn.textContent = '🔗 Auto-save to a file';
+        btn.classList.remove('active-connection');
+        showToast('Disconnected. Backup reminders are back on.', '');
+        updateBackupReminder();
+      },
+      'Disconnect'
+    );
+    return;
+  }
+  if(!fsApiSupported){
+    showToast('This browser can\'t auto-save directly to a file (needs Chrome or Edge) — use Backup / Restore instead.', 'warn');
+    return;
+  }
+  try{
+    const handle = await window.showSaveFilePicker({
+      suggestedName: 'dillex-docket-autosave.json',
+      types: [{ description: 'Dillex docket backup', accept: {'application/json': ['.json']} }]
+    });
+    autoSaveHandle = handle;
+    const btn = document.getElementById('connect-file-btn');
+    btn.textContent = '🔗 Auto-saving to ' + (handle.name || 'file') + ' ✓';
+    btn.classList.add('active-connection');
+    await writeAutoSaveFile();
+    updateBackupReminder();
+    showToast('Connected — every change will now write to that file automatically, for the rest of this session.', 'success');
+  }catch(e){
+    if(e && e.name !== 'AbortError'){ showToast('Could not connect a file for auto-save.', 'warn'); }
+  }
 });
 
 document.getElementById('hard-reset-btn').addEventListener('click', ()=>{
