@@ -27,6 +27,10 @@
   .storage-note{font-size:11.5px;color:var(--ink-soft);background:var(--paper);border:1px solid var(--rule);padding:9px 12px;border-radius:2px;margin-bottom:1rem;line-height:1.5;}
   .storage-note.blocked{border-color:var(--burgundy);color:var(--burgundy);}
   .fresh-copy-note{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--ochre-bg);border:1px solid var(--ochre);color:var(--ink);font-size:12.5px;padding:10px 14px;border-radius:3px;margin-bottom:1rem;}
+  .getting-started-note{display:none;background:var(--ochre-bg);border:1px solid var(--ochre);color:var(--ink);font-size:12.5px;padding:14px 16px;border-radius:3px;margin-bottom:1rem;}
+  .getting-started-note .gs-title{font-family:'Source Serif 4',serif;font-weight:600;font-size:15px;margin-bottom:6px;}
+  .getting-started-note .gs-steps{margin:0 0 10px;padding-left:1.2rem;line-height:1.6;}
+  .getting-started-note .gs-actions{display:flex;gap:8px;flex-wrap:wrap;}
   .fresh-copy-note span{flex:1;min-width:220px;line-height:1.5;}
   .global-search-bar{display:flex;gap:8px;margin-bottom:1rem;}
   .global-search-bar input{flex:1;padding:9px 13px;font-family:'IBM Plex Sans',sans-serif;font-size:13.5px;border:1px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:2px;}
@@ -170,6 +174,12 @@
   select.edit-select:focus, input.edit-text:focus, input#am-search:focus, .modal-input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(24,40,66,0.08);}
 
   .empty-state{text-align:center;padding:38px 20px;color:var(--slate);font-size:13px;border:1px dashed var(--rule);border-radius:4px;background:var(--paper);line-height:1.6;}
+  .attn-row{display:flex;align-items:center;gap:12px;padding:8px 10px;background:var(--paper);border-bottom:1px solid var(--rule);font-size:12.8px;}
+  .attn-row:last-child{border-bottom:none;}
+  .attn-row .attn-no{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-weight:500;min-width:70px;}
+  .attn-row .attn-client{min-width:110px;color:var(--ink-soft);}
+  .attn-row .attn-detail{flex:1;color:var(--ink-soft);}
+  #attn-hearings, #attn-directives, #attn-flagged, #attn-unassigned, #attn-duplicates{background:var(--paper);border:1px solid var(--rule);margin-bottom:1.5rem;}
   .empty-state .icon{font-size:20px;margin-bottom:6px;opacity:.55;}
   .empty-state .sub{font-size:11.5px;color:var(--slate);opacity:.8;margin-top:2px;}
 
@@ -226,10 +236,17 @@
     <button class="info-dismiss" id="info-dismiss-btn" title="Dismiss" aria-label="Dismiss this message">✕</button>
   </div>
   <div class="storage-note blocked" id="storage-blocked-warning" style="display:none;"></div>
-  <div class="fresh-copy-note" id="fresh-copy-note" style="display:none;">
-    <span>This copy has no data in it yet. If you're upgrading from a previous version and have a backup, restore it now to bring your matters across.</span>
-    <button class="tbtn" id="fresh-restore-btn">⬆ Restore a backup</button>
-    <button class="tbtn ghost" id="fresh-dismiss-btn">Start fresh instead</button>
+  <div class="getting-started-note" id="fresh-copy-note" style="display:none;">
+    <div class="gs-title">Getting started</div>
+    <ol class="gs-steps">
+      <li>Upgrading from a previous version and already have a backup? <strong>Restore it</strong> to bring your matters across.</li>
+      <li>Starting fresh? Enter <strong>your name</strong> in the box on All matters (for "My matters only"), then either <strong>add your first matter</strong> or <strong>import a CSV</strong> from Clio.</li>
+    </ol>
+    <div class="gs-actions">
+      <button class="tbtn" id="fresh-restore-btn">⬆ Restore a backup</button>
+      <button class="tbtn ghost" id="fresh-add-btn">+ Add my first matter</button>
+      <button class="tbtn ghost" id="fresh-dismiss-btn">Dismiss</button>
+    </div>
   </div>
   <div class="fresh-copy-note" id="backup-reminder" style="display:none;">
     <span>You've made changes since your last backup. Worth backing up before you close this.</span>
@@ -274,14 +291,34 @@
   <div class="stats stats-cats stats-workload" id="stats-workload" style="display:none;margin-top:8px;"></div>
 
   <div class="tabs">
-    <div class="tab active" data-tab="all">All matters <span class="tab-count" id="tab-count-all"></span></div>
+    <div class="tab active" data-tab="attention">⚠ Needs attention <span class="tab-count" id="tab-count-attention"></span></div>
+    <div class="tab" data-tab="all">All matters <span class="tab-count" id="tab-count-all"></span></div>
     <div class="tab" data-tab="ongoing">Ongoing matters <span class="tab-count" id="tab-count-ongoing"></span></div>
     <div class="tab" data-tab="finished">Finished / concluded <span class="tab-count" id="tab-count-finished"></span></div>
     <div class="tab" data-tab="closed">Closed files <span class="tab-count" id="tab-count-closed"></span></div>
     <div class="tab" data-tab="deploy">Using &amp; backing up this file</div>
   </div>
 
-  <div class="panel active" id="panel-all">
+  <div class="panel active" id="panel-attention">
+    <div class="panel-intro">A daily triage view, pulled live from your matters — nothing here is stored separately. Use <strong>Open →</strong> to jump straight to any matter in All matters.</div>
+
+    <div class="overview-label">Hearings in the next 7 days</div>
+    <div id="attn-hearings"></div>
+
+    <div class="overview-label">Overdue directives</div>
+    <div id="attn-directives"></div>
+
+    <div class="overview-label">🚩 Flagged for review</div>
+    <div id="attn-flagged"></div>
+
+    <div class="overview-label">Active matters with no one assigned</div>
+    <div id="attn-unassigned"></div>
+
+    <div class="overview-label">⚠ Possible duplicate matters</div>
+    <div id="attn-duplicates"></div>
+  </div>
+
+  <div class="panel" id="panel-all">
     <div class="panel-intro">Every matter, referenced by case number only. Domestic abuse and section 8 orders sit under private law; care proceedings sits under public law; transfer of tenancy, financials and divorce are matrimonial/financial matters that often run alongside each other. Group by whichever lens is useful — a matter with more than one category appears in every relevant section. Click a category pill to add or remove it from a matter.</div>
 
     <div class="overview-label">Actions</div>
@@ -450,9 +487,15 @@
       <div class="tagline">Finding things faster</div>
       <h3>A search that works from anywhere, and headers that stay in view</h3>
       <p>The search box at the top of the page works regardless of which tab you're on — type a case number or client name and press <strong>Find</strong> (or Enter) to jump straight to it in All matters, with every other filter cleared out of the way. Table and tab headers now stay visible as you scroll down a long list, so you're never guessing which column — or which section — you're looking at partway down the page. Each tab also shows a live count, so you can see at a glance how much is in Ongoing, Finished/concluded or Closed without opening them.</p>
-      <p>Keyboard shortcuts: press <strong>/</strong> from anywhere to jump into the search box, <strong>1–4</strong> to switch between All matters, Ongoing, Finished/concluded and Closed (<strong>5</strong> for this page), and <strong>Escape</strong> to close an open note panel or dialog.</p>
-      <p>On <strong>All matters</strong>, a <strong>Sort by</strong> control sits next to Group by — case number, date added, next hearing date, next directive due, or client name, applied within whatever grouping you've chosen.</p>
+      <p>Keyboard shortcuts: press <strong>/</strong> from anywhere to jump into the search box, <strong>1–6</strong> to switch between Needs attention, All matters, Ongoing, Finished/concluded, Closed and this page, and <strong>Escape</strong> to close an open note panel or dialog.</p>
+      <p>On <strong>All matters</strong>, a <strong>Sort by</strong> control sits next to Group by — case number, date added, next hearing date, next directive due, or client name, applied within whatever grouping you've chosen. Whatever you set — filters, sort, grouping — is remembered next time you open this file, so you're not rebuilding the same view every session.</p>
       <p>If you've made changes since your last backup, a reminder appears near the top with a one-click <strong>Backup now</strong> button — dismissible for the current session if you're mid-task and not ready yet.</p>
+
+      <div class="tagline">Needs attention</div>
+      <h3>The landing page — what to look at today, in one place</h3>
+      <p>This is now the first tab you see. It pulls together hearings due in the next 7 days, overdue directives, anything flagged for review, and active matters with nobody assigned — each with a one-click <strong>Open →</strong> straight to the matter. Nothing here is separately stored; it's all computed live from the same data as the other pages, so there's nothing extra to keep in sync.</p>
+      <p>It also flags <strong>possible duplicates</strong> — two matters sharing the same case number (almost always a data entry slip, worth fixing) and two matters sharing the same client name (which can be entirely legitimate, a returning client with a new matter, but worth a quick glance to be sure it isn't an accidental double entry).</p>
+
       <div class="tagline">Given the subject matter</div>
       <h3>Handle the file the way you'd handle any case list</h3>
       <ul>
@@ -748,6 +791,38 @@ fillSelect('am-source', SOURCES, 'All sources');
 fillSelect('am-category', CATEGORIES, 'All categories');
 fillSelect('am-lawarea', LAW_AREAS, 'All law areas');
 fillSelect('am-status', STATUSES, 'All statuses');
+
+// ---------- Remember filter/sort/group choices between sessions ----------
+const PERSISTED_SELECT_IDS = ['am-groupby','am-sortby','am-month','am-source','am-category','am-lawarea','am-conduct','am-status','o-month','f-month','c-month'];
+const PERSISTED_CHECKBOX_IDS = ['am-my-matters','am-flagged-only','o-sort-hearing'];
+function persistFilters(){
+  if(!storageOK) return;
+  PERSISTED_SELECT_IDS.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) try{ localStorage.setItem('dillex-filter-'+id, el.value); }catch(e){}
+  });
+  PERSISTED_CHECKBOX_IDS.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) try{ localStorage.setItem('dillex-filter-'+id, el.checked ? '1' : '0'); }catch(e){}
+  });
+}
+function restoreFilters(){
+  if(!storageOK) return;
+  PERSISTED_SELECT_IDS.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    let saved;
+    try{ saved = localStorage.getItem('dillex-filter-'+id); }catch(e){ saved = null; }
+    if(saved !== null && [...el.options].some(o=>o.value===saved)) el.value = saved;
+  });
+  PERSISTED_CHECKBOX_IDS.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    let saved;
+    try{ saved = localStorage.getItem('dillex-filter-'+id); }catch(e){ saved = null; }
+    if(saved !== null) el.checked = saved === '1';
+  });
+}
 
 // Add-matter form selects (required fields, no blank option except month placeholder)
 (function(){
@@ -1171,10 +1246,98 @@ function renderTabCounts(){
   document.getElementById('tab-count-closed').textContent = '(' + MATTERS.filter(m=>m.status==='Closed' || (m.status==='Not proceeding' && hasLegalAid(m))).length + ')';
 }
 
+window.jumpToMatter = function(query){
+  document.getElementById('global-search-input').value = query;
+  runGlobalSearch();
+};
+
+function attnRowHtml(no, client, detail, jumpQuery){
+  return `<div class="attn-row">
+    <span class="attn-no">${esc(no)}</span>
+    <span class="attn-client">${esc(client||'—')}</span>
+    <span class="attn-detail">${detail}</span>
+    <button class="tbtn ghost" onclick="jumpToMatter('${esc(jumpQuery!==undefined?jumpQuery:no)}')">Open →</button>
+  </div>`;
+}
+function attnEmpty(msg){
+  return '<div class="empty-state"><div class="icon">◇</div>'+msg+'</div>';
+}
+
+function renderDuplicates(){
+  const container = document.getElementById('attn-duplicates');
+  const byName = {};
+  const byNo = {};
+  MATTERS.forEach(m=>{
+    if(m.clientRef && m.clientRef.trim()){
+      const key = m.clientRef.trim().toLowerCase();
+      (byName[key] = byName[key]||[]).push(m);
+    }
+    (byNo[m.no] = byNo[m.no]||[]).push(m);
+  });
+  const nameDupes = Object.values(byName).filter(g=>g.length>1);
+  const noDupes = Object.values(byNo).filter(g=>g.length>1);
+
+  let html = '';
+  noDupes.forEach(group=>{
+    html += attnRowHtml(
+      group.map(m=>m.no).join(' / '),
+      '',
+      '<span style="color:var(--burgundy);">Case number '+esc(group[0].no)+' used on '+group.length+' matters — likely a data entry error, worth checking</span>',
+      group[0].no
+    );
+  });
+  nameDupes.forEach(group=>{
+    html += attnRowHtml(
+      group.map(m=>m.no).join(' / '),
+      group[0].clientRef,
+      'Same client name on '+group.length+' matters — could be genuine repeat instructions, worth a quick check',
+      group[0].clientRef
+    );
+  });
+  container.innerHTML = html || attnEmpty('No duplicate case numbers or repeated client names spotted.');
+  return noDupes.length + nameDupes.length;
+}
+
+function renderAttention(){
+  const today = todayStr();
+  const weekAhead = new Date();
+  weekAhead.setDate(weekAhead.getDate()+7);
+  const weekAheadStr = weekAhead.toISOString().slice(0,10);
+
+  const hearingMatters = MATTERS
+    .filter(m=>m.status==='Active' && m.nextHearing && m.nextHearing>=today && m.nextHearing<=weekAheadStr)
+    .sort((a,b)=>a.nextHearing.localeCompare(b.nextHearing));
+  document.getElementById('attn-hearings').innerHTML = hearingMatters.length
+    ? hearingMatters.map(m=>attnRowHtml(m.no, m.clientRef, esc(formatLogDate(m.nextHearing)))).join('')
+    : attnEmpty('Nothing due this week.');
+
+  const overdue = [];
+  MATTERS.forEach(m=>{ (m.directives||[]).forEach(d=>{ if(isDirectiveOverdue(d)) overdue.push({m,d}); }); });
+  overdue.sort((a,b)=>(a.d.dueDate||'').localeCompare(b.d.dueDate||''));
+  document.getElementById('attn-directives').innerHTML = overdue.length
+    ? overdue.map(({m,d})=>attnRowHtml(m.no, m.clientRef, esc((d.description||'Directive'))+' — due '+esc(formatLogDate(d.dueDate)))).join('')
+    : attnEmpty('No overdue directives.');
+
+  const flagged = MATTERS.filter(m=>m.flagged);
+  document.getElementById('attn-flagged').innerHTML = flagged.length
+    ? flagged.map(m=>attnRowHtml(m.no, m.clientRef, esc(m.status))).join('')
+    : attnEmpty('Nothing flagged.');
+
+  const unassigned = MATTERS.filter(m=>m.status==='Active' && (!m.conduct || !m.conduct.trim()));
+  document.getElementById('attn-unassigned').innerHTML = unassigned.length
+    ? unassigned.map(m=>attnRowHtml(m.no, m.clientRef, esc(MONTH_LABEL[m.month]||m.month))).join('')
+    : attnEmpty('Every active matter has someone assigned.');
+
+  const dupeCount = renderDuplicates();
+
+  document.getElementById('tab-count-attention').textContent = '(' + (hearingMatters.length+overdue.length+flagged.length+unassigned.length+dupeCount) + ')';
+}
+
 function renderAll(){
   renderStats();
   renderTabCounts();
   refreshConductOptions();
+  renderAttention();
   renderAllMatters();
   renderOngoing();
   renderFinished();
@@ -1572,7 +1735,7 @@ document.querySelectorAll('.tab').forEach(t=>{
   });
 });
 
-['am-search','am-groupby','am-sortby','am-month','am-source','am-category','am-lawarea','am-conduct','am-status','am-my-matters','am-flagged-only'].forEach(id=>document.getElementById(id).addEventListener('input', renderAllMatters));
+['am-search','am-groupby','am-sortby','am-month','am-source','am-category','am-lawarea','am-conduct','am-status','am-my-matters','am-flagged-only'].forEach(id=>document.getElementById(id).addEventListener('input', ()=>{ renderAllMatters(); persistFilters(); }));
 
 (function(){
   const nameInput = document.getElementById('my-name-input');
@@ -1584,10 +1747,10 @@ document.querySelectorAll('.tab').forEach(t=>{
   nameInput.addEventListener('blur', saveName);
   nameInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') nameInput.blur(); });
 })();
-document.getElementById('o-month').addEventListener('change', renderOngoing);
-document.getElementById('o-sort-hearing').addEventListener('change', renderOngoing);
-document.getElementById('f-month').addEventListener('change', renderFinished);
-document.getElementById('c-month').addEventListener('change', renderClosed);
+document.getElementById('o-month').addEventListener('change', ()=>{ renderOngoing(); persistFilters(); });
+document.getElementById('o-sort-hearing').addEventListener('change', ()=>{ renderOngoing(); persistFilters(); });
+document.getElementById('f-month').addEventListener('change', ()=>{ renderFinished(); persistFilters(); });
+document.getElementById('c-month').addEventListener('change', ()=>{ renderClosed(); persistFilters(); });
 
 // ---------- PDF export (print) ----------
 function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
@@ -1991,13 +2154,15 @@ document.addEventListener('keydown', (e)=>{
     return;
   }
 
-  const tabMap = {'1':'all','2':'ongoing','3':'finished','4':'closed','5':'deploy'};
+  const tabMap = {'1':'attention','2':'all','3':'ongoing','4':'finished','5':'closed','6':'deploy'};
   if(tabMap[e.key]){
     const tabEl = document.querySelector('.tab[data-tab="'+tabMap[e.key]+'"]');
     if(tabEl) tabEl.click();
   }
 });
 
+refreshConductOptions();
+restoreFilters();
 renderAll();
 
 // ---------- Global cross-page search ----------
@@ -2040,11 +2205,19 @@ document.getElementById('global-search-input').addEventListener('keydown', (e)=>
   const banner = document.getElementById('fresh-copy-note');
   const dismissed = storageOK && localStorage.getItem('dillex-fresh-dismissed') === '1';
   if(MATTERS.length === 0 && !dismissed){
-    banner.style.display = 'flex';
+    banner.style.display = 'block';
   }
 })();
 document.getElementById('fresh-restore-btn').addEventListener('click', ()=>{
   document.getElementById('restore-file').click();
+});
+document.getElementById('fresh-add-btn').addEventListener('click', ()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  document.querySelector('.tab[data-tab="all"]').classList.add('active');
+  document.getElementById('panel-all').classList.add('active');
+  document.getElementById('add-matter-toggle').click();
+  document.getElementById('panel-all').scrollIntoView({behavior:'smooth', block:'start'});
 });
 document.getElementById('fresh-dismiss-btn').addEventListener('click', ()=>{
   if(storageOK){ try{ localStorage.setItem('dillex-fresh-dismissed','1'); }catch(e){} }
