@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dillex Solicitors — case docket</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -352,6 +353,45 @@
   .cat-menu{position:fixed;z-index:60;min-width:200px;padding:6px 8px;background:var(--paper);border:1px solid var(--ink);border-radius:3px;box-shadow:0 8px 22px rgba(24,40,66,.22);}
   .cat-opt{display:flex;align-items:center;gap:6px;padding:4px 2px;font-size:12.5px;cursor:pointer;white-space:nowrap;}
   .cat-opt input{margin:0;}
+
+  /* ---------- Client names stand out ---------- */
+  .client-input{font-weight:700;font-size:13.5px;color:var(--ink);min-width:150px;background:#FBF8EE;border-color:#CFC7B0;}
+  .client-input::placeholder{font-weight:400;color:var(--slate);}
+  .client-input:focus{background:var(--paper);}
+  .mp-client{font-weight:700;font-size:19px;color:var(--ink);letter-spacing:-0.005em;}
+  .mp-client::before{content:"·";margin:0 8px 0 2px;font-weight:400;color:var(--slate);}
+  .attn-row .attn-client{font-weight:700;color:var(--ink);min-width:140px;}
+  /* ---------- Delete buttons on log entries and directives: clear and easy to tap ---------- */
+  .log-entry{flex-wrap:wrap;align-items:center;row-gap:6px;}
+  .log-entry .log-event{min-width:0;flex:1 1 170px;}
+  .log-entry .log-outcome{flex:2 1 170px;min-width:0;}
+  .log-del{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--burgundy);background:var(--paper);border:1px solid var(--burgundy);border-radius:3px;padding:5px 11px;cursor:pointer;white-space:nowrap;}
+  .log-del:hover{background:var(--burgundy);color:var(--paper);}
+  /* ---------- Phone layout ---------- */
+  .mpanel{position:sticky;left:0;width:min(100%, calc(100vw - 2.5rem));}
+  @media (max-width:700px){
+    .wrap{padding:.7rem .6rem 2rem;}
+    input[type=text],input[type=date],select,textarea{font-size:16px !important;}
+    .masthead{gap:8px;}
+    .mp-strip{grid-template-columns:repeat(2,1fr);}
+    .log-del,.open-btn,.tbtn{min-height:34px;}
+    .mp-tab{padding:9px 10px;font-size:11.5px;}
+  }
+
+  /* ---------- Simple / Full view, Details tab ---------- */
+  .viewswitch{margin-left:auto;align-self:center;display:inline-flex;border:1px solid var(--ink);border-radius:14px;overflow:hidden;}
+  .viewswitch button{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.03em;text-transform:uppercase;padding:4px 12px;border:none;background:var(--paper);color:var(--ink);cursor:pointer;}
+  .viewswitch button.active{background:var(--ink);color:var(--paper);}
+  .viewswitch + .tab-tool{margin-left:8px;}
+  body.view-simple #select-all-wrap{display:none;}
+  .dt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px 18px;}
+  .dt-field.wide{grid-column:1 / -1;}
+  .dt-label{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);margin-bottom:4px;}
+  .dt-field .edit-select,.dt-field .edit-text{width:100%;max-width:340px;}
+  .dt-field.wide .edit-text{max-width:none;}
+  .log-add-row .edit-text{width:auto;flex:1 1 150px;min-width:130px;}
+  .log-add-row input[type=date]{flex:0 0 150px;}
+  .log-add-row input[type=time]{flex:0 0 120px;}
 </style>
 </head>
 <body>
@@ -391,7 +431,7 @@
     </div>
   </div>
   <div class="fresh-copy-note" id="backup-reminder" style="display:none;">
-    <span>You've made changes since your last backup. Worth backing up before you close this.</span>
+    <span id="backup-reminder-text">You've made changes since your last backup. Worth backing up before you close this.</span>
     <button class="tbtn" id="backup-reminder-btn">⬇ Backup now</button>
     <button class="tbtn ghost" id="backup-reminder-dismiss">Dismiss for now</button>
   </div>
@@ -412,6 +452,8 @@
     <div class="toolbar-group">
       <span class="toolbar-label">Your edits</span>
       <button class="tbtn" id="backup-btn">⬇ Backup edits</button>
+      <button class="tbtn" id="share-backup-btn" style="display:none;" title="Opens the share sheet so you can save the backup to Files, iCloud Drive or AirDrop">📤 Share / save backup</button>
+      <span class="draft-hint" id="persist-status" style="margin:0 0 0 8px;"></span>
       <button class="tbtn ghost" id="restore-btn">⬆ Restore edits</button>
       <input type="file" id="restore-file" accept="application/json,.json" style="display:none;">
       <button class="tbtn ghost" id="connect-file-btn" aria-label="Choose a folder on this computer to save your data to automatically, on supported browsers">📁 Auto-save to a folder</button>
@@ -453,26 +495,29 @@
     <div class="tab" data-tab="finished">Finished / concluded <span class="tab-count" id="tab-count-finished"></span></div>
     <div class="tab" data-tab="closed">Closed files <span class="tab-count" id="tab-count-closed"></span></div>
     <div class="tab" data-tab="deploy">Help</div>
+    <div class="viewswitch" id="viewswitch" role="group" aria-label="How much to show in the lists"><button type="button" data-view="simple">Simple</button><button type="button" data-view="full">Full</button></div>
     <div class="tab-tool" id="intro-toggle" title="Show or hide the short description above each list">ⓘ</div>
   </div>
 
   <div class="panel active" id="panel-attention">
     <div class="panel-intro">A daily triage view, pulled live from your matters — nothing here is stored separately. Use <strong>Open →</strong> to jump straight to any matter in All matters.</div>
 
-    <div class="overview-label">Hearings in the next 7 days</div>
+    <div class="overview-label" id="attn-l-hearings">Hearings in the next 7 days</div>
     <div id="attn-hearings"></div>
 
-    <div class="overview-label">Overdue directives</div>
+    <div class="overview-label" id="attn-l-directives">Overdue directives</div>
     <div id="attn-directives"></div>
 
-    <div class="overview-label">🚩 Flagged for review</div>
+    <div class="overview-label" id="attn-l-flagged">🚩 Flagged for review</div>
     <div id="attn-flagged"></div>
 
-    <div class="overview-label">Active matters with no one assigned</div>
+    <div class="overview-label" id="attn-l-unassigned">Active matters with no one assigned</div>
     <div id="attn-unassigned"></div>
 
-    <div class="overview-label">⚠ Possible duplicate matters</div>
+    <div class="overview-label" id="attn-l-duplicates">⚠ Possible duplicate matters</div>
     <div id="attn-duplicates"></div>
+
+    <div class="empty-state" id="attn-all-clear" style="display:none;"><div class="icon">✓</div>Nothing needs attention right now.<div class="sub">No hearings in the next 7 days, no overdue directives, nothing flagged.</div></div>
   </div>
 
   <div class="panel" id="panel-all">
@@ -504,7 +549,7 @@
       <select id="am-status" aria-label="Status"><option value="">All statuses</option></select>
       <select id="am-conduct" aria-label="Fee earner"><option value="">All fee earners</option></select>
       <button class="tbtn ghost" id="filters-toggle" type="button" aria-expanded="false">⚙ Filters &amp; grouping<span class="filter-badge" id="filter-badge" style="display:none;"></span></button>
-      <label class="select-all-label" title="Select all shown"><input type="checkbox" id="am-select-all"> All</label>
+      <label class="select-all-label" id="select-all-wrap" title="Select all shown"><input type="checkbox" id="am-select-all"> All</label>
       <span class="count" id="am-count"></span>
       <button class="export-btn" id="am-export">⎙ Export as PDF</button>
     </div>
@@ -587,7 +632,7 @@
   <div class="panel" id="panel-deploy">
     <div class="rec">
       <div class="tagline">Version</div>
-      <h3>Version 27.3 — reads notices of hearing, scans and photos</h3>
+      <h3>Version 27.6 — share backup, data protection</h3>
       <p>The version is also shown at the bottom of every page. If a feature described here is missing, you are probably looking at an older copy: after replacing the file on GitHub, wait a minute, then reload with <strong>Ctrl+Shift+R</strong> (Cmd+Shift+R on a Mac) so Chrome fetches the new one. Saved data belongs to the web address, so a new version at the same address picks up your existing data automatically.</p>
 
       <div class="tagline">What this file is</div>
@@ -603,11 +648,14 @@
       <p>Click <strong>Open</strong> beside any case number. A workspace opens under that row with the key dates across the top (last hearing, next hearing, next directive due, directives outstanding) and four tabs:</p>
       <ul>
         <li><strong>Court order</strong> — upload an order and let the page find the dates (below).</li>
-        <li><strong>Dates &amp; directives</strong> — the next hearing, the hearing log (the date each hearing was held or order made) and the directives with their dates to comply with. Overdue directives show in red.</li>
+        <li><strong>Dates &amp; directives</strong> — the next hearing, the hearing log (the date each hearing was held or order made) and the directives with their dates to comply with. Overdue directives show in red. Every log entry and every directive has its own <strong>Delete</strong> button, and an Undo appears for about 12 seconds afterwards.</li>
+        <li><strong>Details</strong> — client name, fee earner, status, legal aid, HMCTS portal flag, month, source, categories and the next-action note: everything the Simple list leaves out.</li>
         <li><strong>Notes</strong> — a working note and the HMCTS portal reference.</li>
         <li><strong>Drafts</strong> — a matter briefing, an attendance note and a directive chaser, filled in from what's recorded. They're templates, not AI; anything in [square brackets] is for you to complete.</li>
       </ul>
       <p>The workspace stays open while you change other things, and the delete ✕ is kept well away from the Open button on the far right of each row. The boxes at the top of the page are shortcuts: click one to jump to that list.</p>
+      <p><strong>Simple and Full view.</strong> The switch above the lists starts on <strong>Simple</strong>, which shows only what you need at a glance: case number, client name, fee earner, status, next hearing and next directive due. <strong>Full</strong> adds month, source, category, legal aid, the HMCTS portal flag and the next-action note. Everything Simple leaves out is always available under <strong>Open → Details</strong>. The <strong>Needs attention</strong> page only shows the sections that have something in them.</p>
+      <p><strong>Calendar.</strong> In <strong>Dates &amp; directives</strong>, <strong>Add to calendar</strong> next to the next hearing (add its time in the box beside the date), the 📅 on any directive, and <strong>Add all dates to calendar</strong> each download a small calendar file. Open it and your phone or computer offers to add the dates, with a reminder the day before. Entries show the case number only, never the client name, because calendars are often synced or shared. Dates added to a calendar don't update if you change them here.</p>
 
       <div class="tagline">Reading a court order</div>
       <h3>Typed, scanned or photographed — it finds three kinds of date</h3>
@@ -636,7 +684,8 @@
 
       <div class="tagline">Keeping your data safe</div>
       <h3>Browser storage, backups, and an auto-save folder</h3>
-      <p>Every edit saves automatically to this browser, tied to this exact file in this exact place; a copy of the file opened elsewhere starts empty. <strong>Backup edits</strong> downloads everything as a JSON file and <strong>Restore edits</strong> loads one back. A reminder appears when you have unsaved changes.</p>
+      <p>Every edit saves automatically to this browser, tied to this exact file in this exact place; a copy of the file opened elsewhere starts empty. <strong>Backup edits</strong> downloads everything as a JSON file and <strong>Restore edits</strong> loads one back. A reminder appears when you have unsaved changes, and after a week it says how old your last backup is.</p>
+      <p><strong>On an iPhone or iPad</strong> the auto-save folder isn't available. Use <strong>Share / save backup</strong> (Options &amp; tools) to send a backup to Files, iCloud Drive or AirDrop. Safari can clear a site's saved data after a long time without visits. The page asks the browser to protect it, but a recent backup is the only real safeguard, and adding the site to your Home Screen (Share → Add to Home Screen) helps too. Never put a backup file in the GitHub repository: it would contain client details.</p>
       <p><strong>📁 Auto-save to a folder</strong> (Chrome or Edge only) is better: choose a folder once under Options &amp; tools and every change is written to a file called <strong>dillex-docket-data.json</strong> there a couple of seconds later. The page remembers the folder; next time one click reconnects it. If the folder holds newer data than this browser, you're asked whether to load it, so an empty page never overwrites what you've saved.</p>
       <ul>
         <li>The data file contains everything, including any client names, so choose a folder inside Dillex's secure, backed-up storage, such as a network drive or synced SharePoint/OneDrive folder. Chrome won't accept system folders like Documents or Desktop themselves, so make a subfolder (for example "Dillex Docket").</li>
@@ -658,7 +707,7 @@
     </div>
   </div>
 
-  <footer>Dillex Solicitors · Clio Manage docket working copy · not a substitute for the source system of record · <span id="build-version" title="Check this to confirm which copy you are using">Version 27.3 (notice-of-hearing reader)</span></footer>
+  <footer>Dillex Solicitors · Clio Manage docket working copy · not a substitute for the source system of record · <span id="build-version" title="Check this to confirm which copy you are using">Version 27.6 (share backup, data protection)</span></footer>
 </div>
 
 <div id="print-area"></div>
@@ -1116,12 +1165,13 @@ function showToast(message, type, action){
     b.addEventListener('click', ()=>{ dismiss(); action.onClick(); });
     t.appendChild(b);
   }
+  while(container.children.length >= 2) container.removeChild(container.firstChild);
   container.appendChild(t);
   setTimeout(dismiss, action ? 12000 : 4200);
 }
 
 // ---------- Undo for deletes (kept in memory for this session only) ----------
-const MATTER_FIELDS = ['month','clientref','source','cats','status','laa','detail','outcome','nexthearing','log','directives','hmcts','hmctsref','conduct','flagged','note','deleted'];
+const MATTER_FIELDS = ['month','clientref','source','cats','status','laa','detail','outcome','nexthearing','hearingtime','log','directives','hmcts','hmctsref','conduct','flagged','note','deleted'];
 const trashBin = [];
 
 function markEdited(){
@@ -1331,6 +1381,7 @@ function buildMatters(){
         detail: getOverride('detail',id) !== null ? getOverride('detail',id) : r[6],
         outcome: getOverride('outcome',id) || '',
         nextHearing: getOverride('nexthearing',id) || '',
+        hearingTime: getOverride('hearingtime',id) || '',
         hearingLog: (()=>{ try{ return JSON.parse(getOverride('log',id) || '[]'); }catch(e){ return []; } })(),
         directives: (()=>{ try{ return JSON.parse(getOverride('directives',id) || '[]'); }catch(e){ return []; } })(),
         hmctsPortal: getOverride('hmcts',id) || 'Unknown',
@@ -1355,6 +1406,7 @@ function buildMatters(){
       detail: getOverride('detail',id) !== null ? getOverride('detail',id) : (o.detail||''),
       outcome: getOverride('outcome',id) || '',
       nextHearing: getOverride('nexthearing',id) !== null ? getOverride('nexthearing',id) : (o.nextHearing || ''),
+        hearingTime: getOverride('hearingtime',id) || '',
       hearingLog: (()=>{ try{ return JSON.parse(getOverride('log',id) || '[]'); }catch(e){ return []; } })(),
       directives: (()=>{ try{ return JSON.parse(getOverride('directives',id) || '[]'); }catch(e){ return []; } })(),
       hmctsPortal: getOverride('hmcts',id) || o.hmctsPortal || 'Unknown',
@@ -1575,11 +1627,11 @@ function detailInput(m){
 function clientRefInput(m){
   const inp = document.createElement('input');
   inp.type = 'text';
-  inp.className = 'edit-text';
+  inp.className = 'edit-text client-input';
   inp.value = m.clientRef;
-  inp.placeholder = 'optional';
-  inp.style.minWidth = '90px';
-  attachAutosave(inp, ()=>{ m.clientRef = inp.value; setOverride('clientref', m.id, m.clientRef); });
+  inp.placeholder = 'Client name';
+  inp.setAttribute('aria-label', 'Client name for case ' + m.no);
+  attachAutosave(inp, ()=>{ m.clientRef = inp.value; setOverride('clientref', m.id, m.clientRef); syncClientHeader(m); });
   return inp;
 }
 
@@ -2720,7 +2772,7 @@ function mergeAiLabels(res, labels){
 // The matter workspace: opens under a matter row, with its button right next to the case number
 // =====================================================================
 const openPanels = new Map();   // matter id -> which sub-tab is showing
-const PANEL_TABS = [['order', 'Court order'], ['dates', 'Dates & directives'], ['notes', 'Notes'], ['drafts', 'Drafts']];
+const PANEL_TABS = [['order', 'Court order'], ['dates', 'Dates & directives'], ['details', 'Details'], ['notes', 'Notes'], ['drafts', 'Drafts']];
 
 function mk(tag, cls, text){
   const e = document.createElement(tag);
@@ -2728,6 +2780,91 @@ function mk(tag, cls, text){
   if(text !== undefined) e.textContent = text;
   return e;
 }
+// ---------- Add dates to a calendar (an .ics file the phone or computer opens) ----------
+function to24h(t){
+  const m = String(t || '').trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
+  if(!m) return '';
+  let h = +m[1];
+  const min = m[2] ? +m[2] : 0;
+  const ap = (m[3] || '').toLowerCase();
+  if(ap === 'pm' && h < 12) h += 12;
+  if(ap === 'am' && h === 12) h = 0;
+  if(h > 23 || min > 59) return '';
+  return pad2(h) + ':' + pad2(min);
+}
+function icsEscape(t){ return String(t || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+function icsFold(line){
+  const out = [];
+  let l = line;
+  while(l.length > 73){ out.push(l.slice(0, 73)); l = ' ' + l.slice(73); }
+  out.push(l);
+  return out.join('\r\n');
+}
+function icsStamp(){
+  const d = new Date();
+  return d.getUTCFullYear() + pad2(d.getUTCMonth() + 1) + pad2(d.getUTCDate()) + 'T' + pad2(d.getUTCHours()) + pad2(d.getUTCMinutes()) + pad2(d.getUTCSeconds()) + 'Z';
+}
+function icsEndOfHour(iso, hhmm){
+  const p = iso.split('-'), t = hhmm.split(':');
+  const d = new Date(+p[0], +p[1] - 1, +p[2], +t[0] + 1, +t[1]);
+  return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + pad2(d.getMinutes()) + '00';
+}
+// Calendar entries carry the case number only, never a client name, because calendars are often shared or synced.
+function calendarEvents(m, kind, idx){
+  const evs = [];
+  const hearing = ()=>{
+    if(m.nextHearing) evs.push({uid:m.id + '-hearing-' + m.nextHearing, date:m.nextHearing, time:m.hearingTime || '', summary:'Hearing — Case ' + m.no, description:'Next hearing for case ' + m.no + '. Added from the case docket.'});
+  };
+  const directive = (d, i, allowComplied)=>{
+    if(d && d.dueDate && (allowComplied || d.status !== 'Complied')) evs.push({uid:m.id + '-directive-' + i + '-' + d.dueDate, date:d.dueDate, time:'', summary:'Directive due — Case ' + m.no + ': ' + shorten(d.description || 'directive', 70), description:(d.description || '') + (d.party ? ' (' + d.party + ')' : '')});
+  };
+  if(kind === 'hearing') hearing();
+  else if(kind === 'directive') directive((m.directives || [])[idx], idx, true);
+  else { hearing(); (m.directives || []).forEach((d, i)=>directive(d, i, false)); }
+  return evs;
+}
+function buildIcs(events){
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Dillex Solicitors//Case docket//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
+  const stamp = icsStamp();
+  events.forEach(e=>{
+    L.push('BEGIN:VEVENT', 'UID:' + e.uid + '@dillex-docket', 'DTSTAMP:' + stamp);
+    if(e.time) L.push('DTSTART:' + e.date.replace(/-/g, '') + 'T' + e.time.replace(':', '') + '00', 'DTEND:' + icsEndOfHour(e.date, e.time));
+    else L.push('DTSTART;VALUE=DATE:' + e.date.replace(/-/g, ''), 'DTEND;VALUE=DATE:' + addDaysIso(e.date, 1).replace(/-/g, ''));
+    L.push('SUMMARY:' + icsEscape(e.summary), 'DESCRIPTION:' + icsEscape(e.description));
+    L.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEscape(e.summary), 'TRIGGER:' + (e.time ? '-P1D' : '-PT15H'), 'END:VALARM', 'END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.map(icsFold).join('\r\n') + '\r\n';
+}
+function downloadIcs(mid, kind, idx){
+  const m = MATTERS.find(x=>x.id === mid);
+  if(!m) return;
+  const events = calendarEvents(m, kind, idx);
+  if(!events.length){ showToast('There are no dates to add yet.', ''); return; }
+  const blob = new Blob([buildIcs(events)], {type:'text/calendar;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'case-' + m.no + '-dates.ics';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  showToast(events.length + ' date' + (events.length === 1 ? '' : 's') + ' ready — open the downloaded file to add ' + (events.length === 1 ? 'it' : 'them') + ' to your calendar.', 'success');
+}
+
+// keep the client name in an open workspace's header in step with the list, without rebuilding it
+function syncClientHeader(m){
+  document.querySelectorAll('tr.note-row[data-mid="' + m.id + '"] .mp-title').forEach(t=>{
+    let c = t.querySelector('.mp-client');
+    if(!m.clientRef){ if(c) c.remove(); return; }
+    if(!c){
+      c = document.createElement('span');
+      c.className = 'mp-client';
+      const no = t.querySelector('.mp-no');
+      if(no && no.nextSibling) t.insertBefore(c, no.nextSibling); else t.appendChild(c);
+    }
+    c.textContent = m.clientRef;
+  });
+}
+
 function relDays(iso){
   if(!iso) return '';
   const n = daysBetween(todayStr(), iso);
@@ -2931,13 +3068,22 @@ function buildMatterPanel(mid, container){
       strip.appendChild(c);
     };
     cell('Last hearing / order made', lastH ? formatLogDate(lastH.date) : '—', lastH ? ((lastH.event || '') + (lastH.outcome ? ' · ' + lastH.outcome : '')) : 'Not recorded yet');
-    cell('Next hearing', m.nextHearing ? formatLogDate(m.nextHearing) : '—', m.nextHearing ? relDays(m.nextHearing) : 'None recorded', (m.nextHearing && m.nextHearing < today) ? 'warn' : '');
+    cell('Next hearing', m.nextHearing ? formatLogDate(m.nextHearing) : '—', m.nextHearing ? relDays(m.nextHearing) + (m.hearingTime ? ' · ' + m.hearingTime : '') : 'None recorded', (m.nextHearing && m.nextHearing < today) ? 'warn' : '');
     cell('Next directive due', nd ? formatLogDate(nd) : '—', nd ? relDays(nd) : (outstanding ? 'No dates set' : 'None outstanding'), (nd && nd < today) ? 'bad' : '');
     cell('Directives outstanding', String(outstanding), overdue ? overdue + ' overdue' : '', overdue ? 'bad' : '');
   }
 
   // ---------- Dates & directives ----------
   const dBody = bodies.dates;
+  const calBar = mk('div', 'log-add-row');
+  calBar.style.marginTop = '0'; calBar.style.marginBottom = '12px';
+  const allCal = mk('button', 'tbtn', '📅 Add all dates to calendar');
+  allCal.type = 'button';
+  allCal.title = 'Downloads a calendar file with the next hearing and every outstanding directive date';
+  allCal.addEventListener('click', ()=>downloadIcs(mid, 'all'));
+  calBar.appendChild(allCal);
+  calBar.appendChild(mk('span', 'draft-hint', 'Calendar entries show the case number only, not the client name.'));
+  dBody.appendChild(calBar);
   const nhBlock = mk('div', 'mp-block');
   dBody.appendChild(nhBlock);
   nhBlock.appendChild(mk('div', 'hearing-block-title', 'Next hearing'));
@@ -2946,7 +3092,12 @@ function buildMatterPanel(mid, container){
   const nhInput = document.createElement('input');
   nhInput.type = 'date'; nhInput.className = 'edit-text'; nhInput.style.maxWidth = '190px';
   const nhClear = mk('button', 'tbtn ghost', 'Clear'); nhClear.type = 'button';
-  nhRow.appendChild(nhInput); nhRow.appendChild(nhClear);
+  const nhTime = document.createElement('input');
+  nhTime.type = 'time'; nhTime.className = 'edit-text'; nhTime.style.maxWidth = '130px';
+  nhTime.setAttribute('aria-label', 'Time of the next hearing (optional)');
+  const nhCal = mk('button', 'tbtn ghost', '📅 Add to calendar'); nhCal.type = 'button';
+  nhCal.addEventListener('click', ()=>downloadIcs(mid, 'hearing'));
+  nhRow.appendChild(nhInput); nhRow.appendChild(nhTime); nhRow.appendChild(nhCal); nhRow.appendChild(nhClear);
   nhBlock.appendChild(nhRow);
   nhBlock.appendChild(mk('div', 'draft-hint', 'Set from a court document, or type it in. It appears under Needs attention in the week before.'));
   const saveNextHearing = (val)=>{
@@ -2954,10 +3105,18 @@ function buildMatterPanel(mid, container){
     if(!m) return;
     m.nextHearing = val;
     setOverride('nexthearing', mid, val);
+    if(!val){ m.hearingTime = ''; setOverride('hearingtime', mid, ''); nhTime.value = ''; }
     renderStrip(); softRefresh(mid);
   };
   nhInput.addEventListener('change', ()=>saveNextHearing(nhInput.value));
   nhClear.addEventListener('click', ()=>{ nhInput.value = ''; saveNextHearing(''); });
+  nhTime.addEventListener('change', ()=>{
+    const m = getM();
+    if(!m) return;
+    m.hearingTime = nhTime.value;
+    setOverride('hearingtime', mid, nhTime.value);
+    renderStrip(); softRefresh(mid);
+  });
 
   const logBlock = mk('div', 'mp-block');
   dBody.appendChild(logBlock);
@@ -2970,14 +3129,20 @@ function buildMatterPanel(mid, container){
   const lOutcome = document.createElement('input'); lOutcome.type = 'text'; lOutcome.className = 'edit-text'; lOutcome.placeholder = 'Outcome';
   const lBtn = mk('button', 'tbtn ghost', '+ Add entry'); lBtn.type = 'button';
   logAdd.appendChild(lDate); logAdd.appendChild(lEvent); logAdd.appendChild(lOutcome); logAdd.appendChild(lBtn);
-  logBlock.appendChild(logAdd);
+  const logForm = mk('div');
+  logForm.style.display = 'none';
+  const logToggle = mk('button', 'tbtn ghost', '+ Add a hearing entry');
+  logToggle.type = 'button'; logToggle.style.marginTop = '8px';
+  logToggle.addEventListener('click', ()=>{ logForm.style.display = logForm.style.display === 'none' ? 'block' : 'none'; });
+  logBlock.appendChild(logToggle); logBlock.appendChild(logForm);
+  logForm.appendChild(logAdd);
   const picks = mk('div', 'log-quickpicks');
   ['Adjourned', 'Order made', 'Order refused', 'Withdrawn', 'Directions given'].forEach(o=>{
     const b = mk('button', 'cat-pill', o); b.type = 'button';
     b.addEventListener('click', ()=>{ lOutcome.value = o; });
     picks.appendChild(b);
   });
-  logBlock.appendChild(picks);
+  logForm.appendChild(picks);
   lBtn.addEventListener('click', ()=>{
     const date = lDate.value, event = lEvent.value.trim(), outcome = lOutcome.value.trim();
     if(!date && !event && !outcome){ showToast('Add a date, event or outcome first.', 'warn'); return; }
@@ -2988,6 +3153,7 @@ function buildMatterPanel(mid, container){
     m.hearingLog.push({date, event, outcome});
     setOverride('log', mid, JSON.stringify(m.hearingLog));
     lDate.value = ''; lEvent.value = ''; lOutcome.value = '';
+    logForm.style.display = 'none';
     refreshAll();
   });
   function renderLog(){
@@ -3001,8 +3167,8 @@ function buildMatterPanel(mid, container){
       row.appendChild(mk('span', 'log-date', e.date ? formatLogDate(e.date) : '—'));
       row.appendChild(mk('span', 'log-event', e.event || ''));
       row.appendChild(mk('span', 'log-outcome', e.outcome || ''));
-      const del = mk('button', 'del-btn', '✕');
-      del.type = 'button'; del.title = 'Remove entry'; del.setAttribute('aria-label', 'Remove hearing log entry');
+      const del = mk('button', 'log-del', '✕ Delete');
+      del.type = 'button'; del.title = 'Delete this hearing log entry (you can undo it)'; del.setAttribute('aria-label', 'Delete hearing log entry');
       del.addEventListener('click', ()=>removeLogEntry(mid, e._idx));
       row.appendChild(del);
       logList.appendChild(row);
@@ -3020,7 +3186,13 @@ function buildMatterPanel(mid, container){
   const dParty = document.createElement('input'); dParty.type = 'text'; dParty.className = 'edit-text'; dParty.placeholder = 'Party (optional)';
   const dBtn = mk('button', 'tbtn ghost', '+ Add directive'); dBtn.type = 'button';
   dirAdd.appendChild(dDate); dirAdd.appendChild(dDesc); dirAdd.appendChild(dParty); dirAdd.appendChild(dBtn);
-  dirBlock.appendChild(dirAdd);
+  const dirForm = mk('div');
+  dirForm.style.display = 'none';
+  const dirToggle = mk('button', 'tbtn ghost', '+ Add a directive');
+  dirToggle.type = 'button'; dirToggle.style.marginTop = '8px';
+  dirToggle.addEventListener('click', ()=>{ dirForm.style.display = dirForm.style.display === 'none' ? 'block' : 'none'; });
+  dirBlock.appendChild(dirToggle); dirBlock.appendChild(dirForm);
+  dirForm.appendChild(dirAdd);
   dBtn.addEventListener('click', ()=>{
     const description = dDesc.value.trim(), dueDate = dDate.value, party = dParty.value.trim();
     if(!description && !dueDate){ showToast('Add at least a description or a due date.', 'warn'); return; }
@@ -3031,6 +3203,7 @@ function buildMatterPanel(mid, container){
     m.directives.push({description, dueDate, party, status:'Outstanding'});
     setOverride('directives', mid, JSON.stringify(m.directives));
     dDesc.value = ''; dDate.value = ''; dParty.value = '';
+    dirForm.style.display = 'none';
     refreshAll();
   });
   function renderDirs(){
@@ -3057,13 +3230,46 @@ function buildMatterPanel(mid, container){
         setOverride('directives', mid, JSON.stringify(mm.directives));
         refreshAll();
       });
-      const del = mk('button', 'del-btn', '✕');
-      del.type = 'button'; del.title = 'Remove directive'; del.setAttribute('aria-label', 'Remove directive');
+      const del = mk('button', 'log-del', '✕ Delete');
+      del.type = 'button'; del.title = 'Delete this directive (you can undo it)'; del.setAttribute('aria-label', 'Delete directive');
       del.addEventListener('click', ()=>removeDirective(mid, d._idx));
-      row.appendChild(tog); row.appendChild(del);
+      const cal = mk('button', 'tbtn ghost dir-toggle', '📅');
+      cal.type = 'button';
+      cal.title = d.dueDate ? 'Add this due date to your calendar' : 'Add a due date first';
+      cal.disabled = !d.dueDate;
+      cal.setAttribute('aria-label', 'Add directive due date to calendar');
+      cal.addEventListener('click', ()=>downloadIcs(mid, 'directive', d._idx));
+      row.appendChild(tog); row.appendChild(cal); row.appendChild(del);
       dirList.appendChild(row);
     });
   }
+
+  // ---------- Details (everything the simple list leaves out) ----------
+  const eBody = bodies.details;
+  const grid = mk('div', 'dt-grid');
+  eBody.appendChild(grid);
+  const addField = (label, control, wide)=>{
+    const f = mk('div', 'dt-field' + (wide ? ' wide' : ''));
+    f.appendChild(mk('div', 'dt-label', label));
+    f.appendChild(control);
+    grid.appendChild(f);
+  };
+  (function(){
+    const m = getM();
+    const cl = clientRefInput(m);
+    cl.addEventListener('change', ()=>{ m.clientRef = cl.value; setOverride('clientref', m.id, m.clientRef); renderAll(); });
+    addField('Client name', cl);
+    const fe = conductInput(m);
+    fe.addEventListener('change', ()=>{ m.conduct = fe.value; setOverride('conduct', m.id, m.conduct); renderAll(); });
+    addField('Fee earner', fe);
+    addField('Status', optionList(STATUSES, m.status, v=>{ m.status = v; setOverride('status', m.id, v); renderAll(); }));
+    addField('Legal aid', optionList(LAAS, m.legalAid, v=>{ m.legalAid = v; setOverride('laa', m.id, v); renderAll(); }));
+    addField('HMCTS portal', optionList(HMCTS_OPTIONS, m.hmctsPortal, v=>{ m.hmctsPortal = v; setOverride('hmcts', m.id, v); }));
+    addField('Month', optionList(MONTHS, m.month, v=>{ m.month = v; setOverride('month', m.id, v); renderAll(); }, MONTH_LABEL));
+    addField('Source', optionList(SOURCES, m.source, v=>{ m.source = v; setOverride('source', m.id, v); renderAll(); }));
+    addField('Categories', categoryEditor(m));
+    addField('Next action / details', detailInput(m), true);
+  })();
 
   // ---------- Notes ----------
   const nBody = bodies.notes;
@@ -3300,7 +3506,7 @@ function buildMatterPanel(mid, container){
     if(f) handleFile(f);
   });
 
-  function syncNh(){ const m = getM(); nhInput.value = (m && m.nextHearing) || ''; }
+  function syncNh(){ const m = getM(); nhInput.value = (m && m.nextHearing) || ''; nhTime.value = (m && m.hearingTime) || ''; }
   function refreshAll(){ renderStrip(); renderLog(); renderDirs(); renderPicker(); syncNh(); softRefresh(mid); }
 
   renderStrip(); renderLog(); renderDirs(); renderPicker(); syncNh();
@@ -3447,6 +3653,10 @@ function renderExtraction(out, mid, filename, res, afterApply, aiHook){
       setHearing = hv;
       mm.nextHearing = setHearing;
       setOverride('nexthearing', mid, setHearing);
+      const picked = res.hearings.find(h=>h.iso === hv);
+      const t24 = picked ? to24h(picked.time) : '';
+      mm.hearingTime = t24;
+      setOverride('hearingtime', mid, t24);
     }
     dirRows.forEach(r=>{
       if(!r.cb.checked) return;
@@ -3575,7 +3785,7 @@ function renderAttention(){
     .filter(m=>m.status==='Active' && m.nextHearing && m.nextHearing>=today && m.nextHearing<=weekAheadStr)
     .sort((a,b)=>a.nextHearing.localeCompare(b.nextHearing));
   document.getElementById('attn-hearings').innerHTML = hearingMatters.length
-    ? hearingMatters.map(m=>attnRowHtml(m.no, m.clientRef, esc(formatLogDate(m.nextHearing)))).join('')
+    ? hearingMatters.map(m=>attnRowHtml(m.no, m.clientRef, esc(formatLogDate(m.nextHearing) + (m.hearingTime ? ' at ' + m.hearingTime : '')))).join('')
     : attnEmpty('Nothing due this week.');
 
   const overdue = [];
@@ -3597,6 +3807,14 @@ function renderAttention(){
 
   const dupeCount = renderDuplicates();
 
+  let attnTotal = 0;
+  [['hearings', hearingMatters.length], ['directives', overdue.length], ['flagged', flagged.length], ['unassigned', unassigned.length], ['duplicates', dupeCount]].forEach(([k, n])=>{
+    attnTotal += n;
+    const lab = document.getElementById('attn-l-' + k), box = document.getElementById('attn-' + k);
+    if(lab) lab.style.display = n ? '' : 'none';
+    if(box) box.style.display = n ? '' : 'none';
+  });
+  document.getElementById('attn-all-clear').style.display = attnTotal ? 'none' : 'block';
   document.getElementById('tab-count-attention').textContent = '(' + (hearingMatters.length+overdue.length+flagged.length+unassigned.length+dupeCount) + ')';
 }
 
@@ -3611,6 +3829,7 @@ function renderAll(){
   renderClosed();
   updateBackupReminder();
   restoreOpenPanels();
+  applyViewColumns();
 }
 
 // ---------- All matters (grouped) ----------
@@ -3618,7 +3837,31 @@ function matterLawAreas(m){
   return [...new Set(m.categories.map(c=>CATEGORY_LAW_AREA[c]).filter(Boolean))];
 }
 // ---------- Multi-select ----------
+const SIMPLE_HIDE = ['Month', 'Source', 'Category', 'Legal aid', 'HMCTS portal', 'Next action / details'];
+// Simple view keeps each list to: case, client, fee earner, status, next hearing, next directive.
+// The rest is one click away under Open → Details.
+function applyViewColumns(){
+  const simple = document.body.classList.contains('view-simple');
+  document.querySelectorAll('.panel table').forEach(table=>{
+    const ths = [...table.querySelectorAll('thead th')];
+    const hide = ths.map((th, i)=>simple && (SIMPLE_HIDE.indexOf(th.textContent.trim()) > -1 || (i === 0 && th.textContent.trim() === '' && !!table.closest('#panel-all'))));
+    const visible = hide.filter(h=>!h).length;
+    ths.forEach((th, i)=>{ th.style.display = hide[i] ? 'none' : ''; });
+    table.querySelectorAll('tbody tr').forEach(tr=>{
+      const cells = tr.children;
+      if(tr.classList.contains('note-row') || (cells.length === 1 && cells[0].colSpan > 1)){ cells[0].colSpan = visible; return; }
+      hide.forEach((h, i)=>{ if(cells[i]) cells[i].style.display = h ? 'none' : ''; });
+    });
+  });
+}
+function setView(v){
+  document.body.classList.toggle('view-simple', v === 'simple');
+  document.querySelectorAll('#viewswitch button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-view') === v));
+  if(storageOK){ try{ localStorage.setItem('dillex-ui-view', v); }catch(e){} }
+  applyViewColumns();
+}
 function updateSelectionBar(){
+  applyViewColumns();
   // drop selections for matters that no longer exist
   const validIds = new Set(MATTERS.map(m=>m.id));
   selectedMatterIds.forEach(id=>{ if(!validIds.has(id)) selectedMatterIds.delete(id); });
@@ -3925,6 +4168,7 @@ function renderOngoing(){
     body.appendChild(makeNoteRow(m.id, 11));
   });
   if(rows.length===0) body.innerHTML = '<tr><td colspan="11"><div class="empty-state"><div class="icon">◇</div>No ongoing matters match this filter.</div></td></tr>';
+  applyViewColumns();
 }
 
 // ---------- Finished / concluded ----------
@@ -3963,6 +4207,7 @@ function renderFinished(){
     body.appendChild(makeNoteRow(m.id, 8));
   });
   if(rows.length===0) body.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon">◇</div>No matters with this status.</div></td></tr>';
+  applyViewColumns();
 }
 
 // ---------- Closed ----------
@@ -4003,6 +4248,7 @@ function renderClosed(){
     body.appendChild(makeNoteRow(m.id, 8));
   });
   if(rows.length===0) body.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon">◇</div>No closed matters match this filter.</div></td></tr>';
+  applyViewColumns();
 }
 
 document.querySelectorAll('.tab').forEach(t=>{
@@ -4043,7 +4289,7 @@ function buildPrintHtml(title, subtitle, columns, rows){
   columns.forEach(c=>h+='<th style="text-align:left;border-bottom:1px solid #182842;padding:4px 6px;text-transform:uppercase;letter-spacing:.03em;color:#666f7d;font-size:9px;">'+esc(c)+'</th>');
   h += '</tr></thead><tbody>';
   rows.forEach(r=>{
-    h += '<tr>' + r.map(v=>'<td style="border-bottom:1px solid #DCD5C4;padding:4px 6px;vertical-align:top;">'+esc(v)+'</td>').join('') + '</tr>';
+    h += '<tr>' + r.map((v, ci)=>'<td style="border-bottom:1px solid #DCD5C4;padding:4px 6px;vertical-align:top;' + (columns[ci] === 'Client' ? 'font-weight:700;' : '') + '">'+esc(v)+'</td>').join('') + '</tr>';
   });
   h += '</tbody></table></div>';
   return h;
@@ -4126,6 +4372,34 @@ function performBackup(){
   showToast('Backup downloaded — '+keyCount+' saved edit'+(keyCount===1?'':'s')+'.', 'success');
 }
 document.getElementById('backup-btn').addEventListener('click', performBackup);
+// On an iPhone or iPad there is no auto-save folder; the share sheet sends a backup to Files, iCloud Drive or AirDrop.
+function canShareBackup(){
+  try{ return !!(navigator.canShare && navigator.share && navigator.canShare({files:[new File(['{}'], 'backup.json', {type:'application/json'})]})); }
+  catch(e){ return false; }
+}
+function refreshShareButton(){
+  const b = document.getElementById('share-backup-btn');
+  if(b) b.style.display = canShareBackup() ? '' : 'none';
+}
+async function shareBackup(){
+  if(!storageOK){ showToast('Local storage is blocked in this browser, so there\'s nothing here to back up.', 'warn'); return; }
+  const { payload, keyCount } = buildBackupPayload();
+  if(keyCount === 0){ showToast('No edits yet to back up — this copy is still at its starting state.', ''); return; }
+  const name = 'dillex-docket-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  const file = new File([JSON.stringify(payload, null, 2)], name, {type:'application/json'});
+  try{
+    await navigator.share({files:[file], title:'Dillex docket backup'});
+    try{ localStorage.setItem('dillex-last-backup-time', String(Date.now())); }catch(e){}
+    try{ sessionStorage.removeItem('dillex-reminder-dismissed-session'); }catch(e){}
+    updateBackupReminder();
+    showToast('Backup shared — keep it somewhere safe, such as Files or iCloud Drive.', 'success');
+  }catch(e){
+    if(e && e.name === 'AbortError') return;   // the share sheet was closed
+    performBackup();                            // sharing didn't work: download it instead
+  }
+}
+document.getElementById('share-backup-btn').addEventListener('click', shareBackup);
+refreshShareButton();
 document.getElementById('backup-reminder-btn').addEventListener('click', performBackup);
 document.getElementById('backup-reminder-dismiss').addEventListener('click', ()=>{
   try{ sessionStorage.setItem('dillex-reminder-dismissed-session','1'); }catch(e){}
@@ -4140,7 +4414,15 @@ function updateBackupReminder(){
   if(dismissedThisSession){ bar.style.display = 'none'; return; }
   const lastEdit = parseInt(localStorage.getItem('dillex-last-edit-time')||'0', 10);
   const lastBackup = parseInt(localStorage.getItem('dillex-last-backup-time')||'0', 10);
-  bar.style.display = (lastEdit > 0 && lastEdit > lastBackup) ? 'flex' : 'none';
+  const needsBackup = (lastEdit > 0 && lastEdit > lastBackup);
+  if(needsBackup){
+    const t = document.getElementById('backup-reminder-text');
+    const days = lastBackup ? Math.floor((Date.now() - lastBackup) / 86400000) : -1;
+    if(t) t.textContent = days < 0 ? 'You haven\'t taken a backup yet — worth doing before you close this.'
+      : days >= 7 ? 'Your last backup was ' + days + ' days ago. Browsers can clear saved data, so back up now.'
+      : 'You\'ve made changes since your last backup. Worth backing up before you close this.';
+  }
+  bar.style.display = needsBackup ? 'flex' : 'none';
 }
 document.getElementById('restore-btn').addEventListener('click', ()=>{
   document.getElementById('restore-file').click();
@@ -4697,6 +4979,12 @@ function updateFilterBadge(){
     }
   }
 })();
+document.querySelectorAll('#viewswitch button').forEach(b=>b.addEventListener('click', ()=>setView(b.getAttribute('data-view'))));
+(function(){
+  let v = 'simple';
+  if(storageOK){ try{ v = localStorage.getItem('dillex-ui-view') || 'simple'; }catch(e){} }
+  setView(v === 'full' ? 'full' : 'simple');
+})();
 updateFilterBadge();
 document.getElementById('filters-toggle').addEventListener('click', ()=>{
   const box = document.getElementById('filters-more');
@@ -4723,6 +5011,17 @@ document.getElementById('more-overview-toggle').addEventListener('click', ()=>{
 })();
 renderAll();
 initAutoSaveFolder();
+// ask the browser not to clear this site's saved data when it is short of space
+(function(){
+  const el = document.getElementById('persist-status');
+  const show = (on)=>{ window.__storagePersisted = !!on; if(el) el.textContent = on ? 'Browser protection for saved data: on' : 'Browser protection for saved data: not granted — keep backups'; };
+  try{
+    if(navigator.storage && navigator.storage.persist){
+      (navigator.storage.persisted ? navigator.storage.persisted() : Promise.resolve(false))
+        .then(p=>p ? true : navigator.storage.persist()).then(show).catch(()=>{});
+    }
+  }catch(e){}
+})();
 
 // ---------- Global cross-page search ----------
 function runGlobalSearch(){
